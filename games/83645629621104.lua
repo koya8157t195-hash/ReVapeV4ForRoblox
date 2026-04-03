@@ -18,6 +18,10 @@ local function notif(...)
 	return vape:CreateNotification(...)
 end
 
+for _, v in {'AutoClicker', 'Reach', 'MurderMystery', 'AutoRejoin', 'Killaura', 'ProfileInstaller', 'Swim', 'TargetStrafe', 'LongJump', 'Mousetp'} do
+	vape:Remove(v)
+end
+
 run(function()
     local infstam
     local stamscript = require(game.ReplicatedStorage.Systems.Character.Game.Sprinting)
