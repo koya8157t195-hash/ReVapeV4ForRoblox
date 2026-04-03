@@ -28,10 +28,18 @@ run(function()
             if callback then
               connection = game:GetService("RunService").Heartbeat:Connect(function()
                   connection:Disconnect()
-                  stamscript.StaminaLossDisabled = nil
+                  stamscript.StaminaLossDisabled = function()
+                        return 0
+					end
                 end)
+			else
+				if connection then
+                connection:Disconnect()
+                connection = nil
+                end		
+
 							
-                stamscript.StaminalossDisabled = function()
+                stamscript.StaminaLossDisabled = nil
 				end
             end
         end
