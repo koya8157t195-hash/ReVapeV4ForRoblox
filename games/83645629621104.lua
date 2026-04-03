@@ -29,7 +29,8 @@ run(function()
               connection = game:GetService("RunService").Heartbeat:Connect(function()
                   connection:Disconnect()
                   stamscript.StaminaLossDisabled = nil
-                end
+                end)
+							
                 stamscript.StaminalossDisabled = function()
             end
         end
