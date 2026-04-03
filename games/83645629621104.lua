@@ -32,6 +32,7 @@ run(function()
                 end)
 							
                 stamscript.StaminalossDisabled = function()
+				end
             end
         end
     })
