@@ -20,27 +20,19 @@ end
 
 run(function()
     local infstam
-    local connection
     local stamscript = require(game.ReplicatedStorage.Systems.Character.Game.Sprinting)
+
     infstam = vape.Categories.Blatant:CreateModule({
-        Name = "Infinte stamina",
+        Name = "Infinite Stamina",
         Function = function(callback)
             if callback then
-              connection = game:GetService("RunService").Heartbeat:Connect(function()
-                  connection:Disconnect()
-                  stamscript.StaminaLossDisabled = function()
-                        return 0
-					end
-                end)
-			else
-				if connection then
-                connection:Disconnect()
-                connection = nil
-                end		
-
-							
+                -- enable
+                stamscript.StaminaLossDisabled = function()
+                    return 0
+                end
+            else
+                -- disable
                 stamscript.StaminaLossDisabled = nil
-				end
             end
         end
     })
