@@ -18,7 +18,7 @@ local function notif(...)
 	return vape:CreateNotification(...)
 end
 
-for _, v in {'AutoClicker', 'Reach', 'MurderMystery', 'AutoRejoin', 'Killaura', 'Swim', 'TargetStrafe', 'LongJump', 'Mousetp'} do
+for _, v in {'AutoClicker', 'Reach', 'MurderMystery', 'AutoRejoin', 'Killaura', 'Swim', 'TargetStrafe', 'LongJump', 'MouseTP', 'Invisible'} do
 	vape:Remove(v)
 end
 
