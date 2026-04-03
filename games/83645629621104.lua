@@ -25,7 +25,7 @@ run(function()
     infstam = vape.Categories.Blatant:CreateModule({
         Name = "Infinte stamina"
         Function = function(callback)
-            if callback then
+            if callback then,
               connection = game:GetService("RunService").Heartbeat:Connect(function()
                   connection:Disconnect()
                   stamscript.StaminaLossDisabled = nil
