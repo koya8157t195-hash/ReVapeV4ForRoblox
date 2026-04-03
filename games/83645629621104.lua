@@ -41,3 +41,56 @@ run(function()
         end
     })
 end)
+
+run(function()
+    local AutoGen
+    local Delay
+    local Thread
+
+    local function runAutoGen()
+        if Thread then
+            task.cancel(Thread)
+        end
+
+        Thread = task.spawn(function()
+            repeat
+                for _, obj in pairs(workspace.Map.Ingame.Map:GetChildren()) do
+                    if obj.Name == "Generator" then
+                        local remotes = obj:FindFirstChild("Remotes")
+                        if remotes then
+                            local re = remotes:FindFirstChild("RE")
+                            if re then
+                                re:FireServer()
+                            end
+                        end
+                    end
+                end
+
+                task.wait(Delay.Value)
+            until not AutoGen.Enabled
+        end)
+    end
+
+    AutoGen = vape.Categories.Minigames:CreateModule({
+        Name = "Auto Generator Fix",
+        Function = function(callback)
+            if callback then
+                runAutoGen()
+            else
+                if Thread then
+                    task.cancel(Thread)
+                    Thread = nil
+                end
+            end
+        end,
+        Tooltip = "Automatically fires generator remotes"
+    })
+
+    Delay = AutoGen:CreateSlider({
+        Name = "Delay",
+        Min = 0.5,
+        Max = 5,
+        Default = 2.5,
+        Suffix = "s"
+    })
+end)
