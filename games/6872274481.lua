@@ -9100,7 +9100,7 @@ end)
 
 local ZoomUnlocker
 run(function()
-    ZoomUnlocker = vape.Categories.Legit:CreateModule({
+    ZoomUnlocker = vape.Categories.Render:CreateModule({
         Name = "Zoom Unlocker",
         Function = function(enabled)
             game:GetService("Players").LocalPlayer.CameraMaxZoomDistance = enabled and math.huge or 128
@@ -9381,7 +9381,7 @@ run(function() --> by max, idea from monia
 		return
 	end
 
-	BedAlarm = vape.Categories.Legit:CreateModule({
+	BedAlarm = vape.Categories.Render:CreateModule({
 		Name = 'Bed Alarm',
 		Function = function(callback)
 			if callback then
@@ -9490,7 +9490,7 @@ run(function()
 	local olditems
 	local oldhook
 	local oldConnect
-	TaxRemover = vape.Categories.Legit:CreateModule({
+	TaxRemover = vape.Categories.Blatant:CreateModule({
 		Name = "TaxRemover",
 		Function = function(callback)
 			if callback then
@@ -10846,7 +10846,7 @@ end)
 
 run(function()
 	local a = {Enabled = false}
-	a = vape.Categories.Legit:CreateModule({
+	a = vape.Categories.World:CreateModule({
 		Name = "Leave Party",
 		Function = function(call)
 			if call then
@@ -11049,7 +11049,7 @@ run(function()
 	end
 
 
-    KitRender = vape.Categories.Legit:CreateModule({
+    KitRender = vape.Categories.Render:CreateModule({
         Name = "KitRender",
         Function = function(callback)
             if callback then
@@ -11080,7 +11080,7 @@ run(function()
     local HitFix
 	local PingBased
 	local Options
-    HitFix = vape.Categories.Legit:CreateModule({
+    HitFix = vape.Categories.Combat:CreateModule({
         Name = 'HitFix',
         Function = function(callback)
             if role ~= "owner" and role ~= "coowner" and role ~= "admin" and role ~= "friend" and role ~= "premium" then
@@ -11291,7 +11291,7 @@ end)
 run(function()
     local DragonSpam
 
-    DragonSpam = vape.Categories.Legit:CreateModule({
+    DragonSpam = vape.Categories.Combat:CreateModule({
         Name = "DragonBreathSpam",
         Tooltip = "Spams DragonBreath on yourself",
         Function = function(callback)
