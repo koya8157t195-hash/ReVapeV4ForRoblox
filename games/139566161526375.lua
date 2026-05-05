@@ -38,7 +38,7 @@ local Killaura, Flight = {Enabled = false}, {Enabled = false}
 				repeat
 					task.wait()
 
-					if entitylib.isAlive(lplr) then
+					if entitylib.isAlive then
 						local tool = Entity.tool.getTool(lplr)
 
 						if tool and tool:HasTag('Sword') then
