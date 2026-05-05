@@ -103,7 +103,6 @@ local Killaura, Flight = {Enabled = false}, {Enabled = false}
 				until not Killaura.Enabled
 			else
 				EntityCFrame = nil
-				Library:CreateTargetHUD(false)
 
 				if Entity.isAlive(lplr) then
 					local tool = Entity.tool.getTool(lplr)
