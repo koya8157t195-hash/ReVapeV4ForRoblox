@@ -54,8 +54,7 @@ local Killaura, Flight = {Enabled = false}, {Enabled = false}
 
 								if plr and Entity.isAlive(plr) then
 									EntityCFrame = CFrame.lookAt(lplr.Character.PrimaryPart.Position, Vector3.new(plr.Character.PrimaryPart.Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character.PrimaryPart.Position.Z))
-									pcall(Library.CreateTargetHUD, Library, TargetHUD.Enabled, plr.Name, plr.Character:FindFirstChildOfClass('Humanoid'), Players:GetUserThumbnailAsync(plr.UserId, Enum.ThumbnailType.AvatarBust, Enum.ThumbnailSize.Size48x48))
-
+								
 									ReplicatedStorage.Modules.Knit.Services.ToolService.RF.ToggleBlockSword:InvokeServer(AutoBlock.Enabled, tool)
 									if Swing.Enabled and SwingDelay < tick() then
 										SwingDelay = tick() + 0.25
@@ -90,8 +89,7 @@ local Killaura, Flight = {Enabled = false}, {Enabled = false}
 									end
 								else
 									EntityCFrame = nil
-									Library:CreateTargetHUD(false)
-
+								
 									if Entity.isAlive(lplr) then
 										local tool = Entity.tool.getTool(lplr)
 										if tool and tool:HasTag('Sword') then
@@ -131,9 +129,6 @@ local Killaura, Flight = {Enabled = false}, {Enabled = false}
 		Min = 1,
 		Max = 18,
 		Default = 16
-	})
-	TargetHUD = Killaura:CreateToggle({
-		Name = 'HUD'
 	})
 	Wallcheck = Killaura:CreateToggle({
 		Name = 'Wallcheck'
