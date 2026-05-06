@@ -19,15 +19,22 @@ local store = {
 	serverBlocks = {}
 }
 
+-- Load GitHub libraries for "Blink" networking support
 run(function()
-local function loadLocalFile(path)
-	local suc, res = pcall(function()
-		return readfile(path)
-	end)
-	return suc and res or nil
-end
+	local function download(path, localpath)
+		local repo = 'Koya50/ReVapeV4ForRoblox'
+		local suc, res = pcall(function()
+			return game:HttpGet('https://raw.githubusercontent.com/'..repo..'/main/'..path, true)
+		end)
+		if suc and res ~= '404: Not Found' then
+			pcall(function() writefile(localpath, res) end)
+		end
+	end
 
-	local constructCode = loadLocalFile('newvape/libraries/construct.lua')
+	if not isfile('newvape/libraries/blink.lua') then download('libraries/blink.lua', 'newvape/libraries/blink.lua') end
+	if not isfile('newvape/libraries/construct.lua') then download('libraries/construct.lua', 'newvape/libraries/construct.lua') end
+
+	local constructCode = isfile('newvape/libraries/construct.lua') and readfile('newvape/libraries/construct.lua')
 	if constructCode then
 		local suc, res = pcall(function()
 			return loadstring(constructCode)()
@@ -36,6 +43,7 @@ end
 	end
 end)
 
+-- Entity Library Initialization (NPC & Team support from GitHub)
 run(function()
 	local oldstart = entitylib.start
 	local function teamcheck(ent)
