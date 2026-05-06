@@ -36,13 +36,12 @@ local Killaura, Flight = {Enabled = false}, {Enabled = false}
 		Function = function(callback)
 			if callback then
 				repeat
-					task.wait()
+					task.wait(0.03)
 
 					if entitylib.isAlive then
 						local tool = Entity.tool.getTool(lplr)
-
 						if tool and tool:HasTag('Sword') then
-							task.spawn(function()
+							
 								local suc, res = pcall(function()
 									return Entity:GetClosestPlayer(Range.Value, Angle.Value, Wallcheck.Enabled)
 								end)
@@ -74,10 +73,7 @@ local Killaura, Flight = {Enabled = false}, {Enabled = false}
 									end)
 
 									local bdplr
-									if suc and res ~= nil then
-										bdplr = res
-									end
-
+											if suc and bdplr and bdplr.Id then
 									if bdplr and bdplr.Id and Dependencies.Constants.Extra and AttackDelay < tick() then -- (not Dependencies.Modules.Detections.Logs.SwordH)
 										AttackDelay = tick() + 0.1
 										task.spawn(Dependencies.Blink.item_action.attack_entity.fire, {
@@ -141,6 +137,8 @@ end)
 
 run(function()
 local Disabler
+local oldAimbotParent = Dependencies.Paths.AimbotDtc.Parent
+local oldReportParent = Dependencies.Paths.SendReport.Parent
 	Disabler = vape.Categories.Utility:CreateModule({
 		Name = 'Disabler',
     Tooltip = 'report disabler?',
