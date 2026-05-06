@@ -34,19 +34,26 @@ run(function()
 
 		if suc and res ~= '404: Not Found' then
 			pcall(function() writefile(localpath, res) end)
+			return true
 		end
+		return false
 	end
 
+	local b_exists = isfile('newvape/libraries/blink.lua') or download('libraries/blink.lua', 'newvape/libraries/blink.lua')
+	local c_exists = isfile('newvape/libraries/construct.lua') or download('libraries/construct.lua', 'newvape/libraries/construct.lua')
 
-	if not isfile('newvape/libraries/blink.lua') then download('libraries/blink.lua', 'newvape/libraries/blink.lua') end
-	if not isfile('newvape/libraries/construct.lua') then download('libraries/construct.lua', 'newvape/libraries/construct.lua') end
-
-	local constructCode = isfile('newvape/libraries/construct.lua') and readfile('newvape/libraries/construct.lua')
-	if constructCode then
+	if c_exists then
+		local constructCode = readfile('newvape/libraries/construct.lua')
 		local suc, res = pcall(function()
 			return loadstring(constructCode)()
 		end)
-		if suc then bd = res end
+		if suc then 
+			bd = res 
+		else
+			vape:CreateNotification('Vape', 'Failed to initialize combat: '..tostring(res), 5, 'alert')
+		end
+	else
+		vape:CreateNotification('Vape', 'Combat libraries missing from your repo!', 10, 'alert')
 	end
 end)
 
@@ -163,63 +170,53 @@ run(function()
 							Limit = Max and Max.Value or 10
 						})
 		
-						if #plrs > 0 then
-							local selfpos = entitylib.character and entitylib.character.RootPart and entitylib.character.RootPart.Position
-							local localfacing = entitylib.character and entitylib.character.RootPart and entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1)
+						task.spawn(function()
+							if #plrs > 0 then
+								local selfpos = entitylib.character.RootPart.Position
+								local localfacing = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1)
 
-							if selfpos and localfacing then
-								if AutoBlock and AutoBlock.Enabled and tool then
+								if AutoBlock.Enabled and tool then
 									blockSword(true, tool.Name)
 								end
-			
-								for _, v in plrs do
-									-- Prediction and Angle check from GitHub
-									local delta = ((v.RootPart.Position + v.Humanoid.MoveDirection) - selfpos)
-									local flatdelta = delta * Vector3.new(1, 0, 1)
-									local angle = 0
-									if flatdelta.Magnitude > 0 then
-										angle = math.acos(localfacing:Dot(flatdelta.Unit))
-									end
-									
-									if AngleSlider and angle > (math.rad(AngleSlider.Value) / 2) then continue end
-									
-									table.insert(attacked, {
-										Entity = v,
-										Check = (AttackRange and delta.Magnitude > AttackRange.Value) and BoxSwingColor or BoxAttackColor
-									})
-									
-									if targetinfo and targetinfo.Targets then
-										targetinfo.Targets[v] = tick() + 1
-									end
-				
-									-- Swing animation logic
-									if Swing and not Swing.Enabled and SwingDelay < tick() then
-										SwingDelay = tick() + 0.25
-										if tool:FindFirstChild('Animations') and tool.Animations:FindFirstChild('Swing') then
-											entitylib.character.Humanoid.Animator:LoadAnimation(tool.Animations.Swing):Play()
-										end
-			
-										if vape.ThreadFix then setthreadidentity(2) end
-										if bd.ViewmodelController then
-											bd.ViewmodelController:PlayAnimation(tool.Name)
-										end
-										if vape.ThreadFix then setthreadidentity(8) end
-									end
-				
-									-- THE GITHUB HIT (Blink protocol with rizz payload)
-									if AttackRange and delta.Magnitude > AttackRange.Value then continue end
-									if AttackDelay < tick() then
-										AttackDelay = tick() + 0.1
+
+								task.spawn(function()
+									for _, v in plrs do
+										local delta = ((v.RootPart.Position + v.Humanoid.MoveDirection) - selfpos)
+										local angle = math.acos(localfacing:Dot((delta * Vector3.new(1, 0, 1)).Unit))
+										if angle > (math.rad(AngleSlider.Value) / 2) then continue end
+										table.insert(attacked, {
+											Entity = v,
+											Check = delta.Magnitude > AttackRange.Value and BoxSwingColor or BoxAttackColor
+										})
 										
-										-- Lookup the internal entity ID required for Blink
-										local bdent = bd.Entity and bd.Entity.FindByCharacter and bd.Entity.FindByCharacter(v.Character)
-										
-										task.spawn(function()
-											pcall(function()
+										if targetinfo and targetinfo.Targets then
+											targetinfo.Targets[v] = tick() + 1
+										end
+
+										if Swing and not Swing.Enabled and SwingDelay < tick() then
+											SwingDelay = tick() + 0.25
+											if tool:FindFirstChild('Animations') and tool.Animations:FindFirstChild('Swing') then
+												entitylib.character.Humanoid.Animator:LoadAnimation(tool.Animations.Swing):Play()
+											end
+
+											if vape.ThreadFix then setthreadidentity(2) end
+											if bd.ViewmodelController then
+												bd.ViewmodelController:PlayAnimation(tool.Name)
+											end
+											if vape.ThreadFix then setthreadidentity(8) end
+										end
+
+										if delta.Magnitude > AttackRange.Value then continue end
+										if AttackDelay < tick() then
+											AttackDelay = tick() + 0.1
+
+											local bdent = bd and bd.Entity and bd.Entity.FindByCharacter and bd.Entity:FindByCharacter(v.Character)
+
+											task.spawn(function()
 												if bdent and bd.Blink and bd.Blink.item_action and bd.Blink.item_action.attack_entity then
 													bd.Blink.item_action.attack_entity.fire({
 														target_entity_id = bdent.Id,
-														is_crit = (Criticals.Enabled and true) or (entitylib.character.RootPart and entitylib.character.RootPart.AssemblyLinearVelocity.Y < 0),
+														is_crit = (Criticals.Enabled and true) or (entitylib.character and entitylib.character.RootPart and entitylib.character.RootPart.AssemblyLinearVelocity.Y < 0),
 														weapon_name = tool.Name,
 														extra = {
 															rizz = 'Bro.',
@@ -227,20 +224,15 @@ run(function()
 															those = workspace.Name == 'Ok'
 														}
 													})
-												else
-													-- Fallback to standard remote if Blink isn't ready
-													if bd.ToolService and bd.ToolService.AttackPlayerWithSword then
-														bd.ToolService:AttackPlayerWithSword(v.Character, (Criticals.Enabled and true) or (entitylib.character.RootPart and entitylib.character.RootPart.AssemblyLinearVelocity.Y < 0), tool.Name)
-													end
 												end
 											end)
-										end)
+										end
 									end
-								end
+								end)
+							elseif AutoBlock and AutoBlock.Enabled and tool then
+								blockSword(false, tool.Name)
 							end
-						elseif AutoBlock and AutoBlock.Enabled and tool then
-							blockSword(false, tool.Name)
-						end
+						end)
 					end
 	
 					-- Visuals (Boxes & Particles)
