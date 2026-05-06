@@ -20,6 +20,23 @@ local store = {
 }
 
 run(function()
+local function loadLocalFile(path)
+	local suc, res = pcall(function()
+		return readfile(path)
+	end)
+	return suc and res or nil
+end
+
+	local constructCode = loadLocalFile('newvape/libraries/construct.lua')
+	if constructCode then
+		local suc, res = pcall(function()
+			return loadstring(constructCode)()
+		end)
+		if suc then bd = res end
+	end
+end)
+
+run(function()
 	local oldstart = entitylib.start
 	local function teamcheck(ent)
 		local suc, res = pcall(function()
