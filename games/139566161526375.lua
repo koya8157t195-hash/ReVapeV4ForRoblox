@@ -19,8 +19,9 @@ local store = {
 	serverBlocks = {}
 }
 
-local entitylib = vape.Libraries.entity
+
 local vape = shared.vape
+local entitylib = vape.Libraries.entity
 
 local function getTool()
 	return lplr.Character and lplr.Character:FindFirstChildWhichIsA('Tool')
