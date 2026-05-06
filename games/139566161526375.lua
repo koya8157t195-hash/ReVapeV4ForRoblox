@@ -18,23 +18,25 @@ local store = {
 	blocks = {},
 	serverBlocks = {}
 }
-
 local isfile = isfile or function(file)
 	local suc, res = pcall(function() return readfile(file) end)
 	return suc and res ~= nil and res ~= ''
 end
 local writefile = writefile or function() end
 
+-- Load GitHub libraries for "Blink" networking support
 run(function()
 	local function download(path, localpath)
 		local repo = 'Koya50/ReVapeV4ForRoblox'
 		local suc, res = pcall(function()
 			return game:HttpGet('https://raw.githubusercontent.com/'..repo..'/main/'..path, true)
 		end)
+
 		if suc and res ~= '404: Not Found' then
 			pcall(function() writefile(localpath, res) end)
 		end
 	end
+
 
 	if not isfile('newvape/libraries/blink.lua') then download('libraries/blink.lua', 'newvape/libraries/blink.lua') end
 	if not isfile('newvape/libraries/construct.lua') then download('libraries/construct.lua', 'newvape/libraries/construct.lua') end
@@ -48,7 +50,7 @@ run(function()
 	end
 end)
 
-
+-- Entity Library Initialization (NPC & Team support from GitHub)
 run(function()
 	local oldstart = entitylib.start
 	local function teamcheck(ent)
@@ -213,23 +215,25 @@ run(function()
 										local bdent = bd.Entity and bd.Entity.FindByCharacter and bd.Entity.FindByCharacter(v.Character)
 										
 										task.spawn(function()
-											if bdent and bd.Blink and bd.Blink.item_action and bd.Blink.item_action.attack_entity then
-												bd.Blink.item_action.attack_entity.fire({
-													target_entity_id = bdent.Id,
-													is_crit = (Criticals.Enabled and true) or (entitylib.character.RootPart and entitylib.character.RootPart.AssemblyLinearVelocity.Y < 0),
-													weapon_name = tool.Name,
-													extra = {
-														rizz = 'Bro.',
-														owo = 'What\'s this? OwO ',
-														those = workspace.Name == 'Ok'
-													}
-												})
-											else
-												-- Fallback to standard remote if Blink isn't ready
-												if bd.ToolService and bd.ToolService.AttackPlayerWithSword then
-													bd.ToolService:AttackPlayerWithSword(v.Character, (Criticals.Enabled and true) or (entitylib.character.RootPart and entitylib.character.RootPart.AssemblyLinearVelocity.Y < 0), tool.Name)
+											pcall(function()
+												if bdent and bd.Blink and bd.Blink.item_action and bd.Blink.item_action.attack_entity then
+													bd.Blink.item_action.attack_entity.fire({
+														target_entity_id = bdent.Id,
+														is_crit = (Criticals.Enabled and true) or (entitylib.character.RootPart and entitylib.character.RootPart.AssemblyLinearVelocity.Y < 0),
+														weapon_name = tool.Name,
+														extra = {
+															rizz = 'Bro.',
+															owo = 'What\'s this? OwO ',
+															those = workspace.Name == 'Ok'
+														}
+													})
+												else
+													-- Fallback to standard remote if Blink isn't ready
+													if bd.ToolService and bd.ToolService.AttackPlayerWithSword then
+														bd.ToolService:AttackPlayerWithSword(v.Character, (Criticals.Enabled and true) or (entitylib.character.RootPart and entitylib.character.RootPart.AssemblyLinearVelocity.Y < 0), tool.Name)
+													end
 												end
-											end
+											end)
 										end)
 									end
 								end
