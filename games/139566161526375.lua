@@ -4,6 +4,8 @@ local cloneref = cloneref or function(obj) return obj end
 local playersService = cloneref(game:GetService('Players'))
 local replicatedStorage = cloneref(game:GetService('ReplicatedStorage'))
 local runService = cloneref(game:GetService('RunService'))
+local inputService = cloneref(game:GetService('UserInputService'))
+local lplr = playersService.LocalPlayer
 
 local bd = {
 	ToolService = {
@@ -17,8 +19,7 @@ local store = {
 	serverBlocks = {}
 }
 
-
-local lplr = playersService.LocalPlayer
+local entitylib = vape.Libraries.entity
 local vape = shared.vape
 
 local function getTool()
