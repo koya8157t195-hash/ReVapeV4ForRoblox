@@ -24,7 +24,6 @@ local isfile = isfile or function(file)
 end
 local writefile = writefile or function() end
 
--- Load GitHub libraries for "Blink" networking support
 run(function()
 	local function download(path, localpath)
 		local repo = 'Koya50/ReVapeV4ForRoblox'
@@ -57,7 +56,6 @@ run(function()
 	end
 end)
 
--- Entity Library Initialization (NPC & Team support from GitHub)
 run(function()
 	local oldstart = entitylib.start
 	local function teamcheck(ent)
@@ -159,7 +157,7 @@ run(function()
 					local tool = getAttackData()
 					local attacked = {}
 					
-					-- GitHub targeting logic requires a Sword tag (checking if we should force it)
+
 					if entitylib and entitylib.AllPosition and tool and tool:HasTag('Sword') then
 						local plrs = entitylib.AllPosition({
 							Range = SwingRange and SwingRange.Value or 16,
@@ -235,7 +233,6 @@ run(function()
 						end)
 					end
 	
-					-- Visuals (Boxes & Particles)
 					for i, v in Boxes do
 						v.Adornee = attacked[i] and attacked[i].Entity.RootPart or nil
 						if v.Adornee then
@@ -296,7 +293,6 @@ run(function()
 	Swing = Killaura:CreateToggle({Name = 'No Swing'})
 	Block = Killaura:CreateToggle({Name = 'No Block'})
 	
-	--Visual setup (Show target & Particles)
 	Killaura:CreateToggle({
 		Name = 'Show target',
 		Function = function(callback)
