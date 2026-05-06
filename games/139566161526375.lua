@@ -94,7 +94,7 @@ local Killaura, Flight = {Enabled = false}, {Enabled = false}
 									end
 								end
 							end
-						end
+						end)
 					end
 				until not Killaura.Enabled
 			else
