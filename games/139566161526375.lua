@@ -5,7 +5,13 @@ local playersService = cloneref(game:GetService('Players'))
 local replicatedStorage = cloneref(game:GetService('ReplicatedStorage'))
 local runService = cloneref(game:GetService('RunService'))
 
-local bd = {}
+local bd = {
+	ToolService = {
+		ToggleBlockSword = function(self, tog, tool)
+			return replicatedStorage.Modules.Knit.Services.ToolService.RF.ToggleBlockSword:InvokeServer(tog, tool)
+		end
+	}
+}
 local store = {
 	blocks = {},
 	serverBlocks = {}
