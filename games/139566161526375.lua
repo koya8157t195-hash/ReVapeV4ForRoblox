@@ -133,23 +133,3 @@ local Killaura, Flight = {Enabled = false}, {Enabled = false}
 		Enabled = true
 	})
 end)
-
-
-run(function()
-local Disabler
-local oldAimbotParent = Dependencies.Paths.AimbotDtc.Parent
-local oldReportParent = Dependencies.Paths.SendReport.Parent
-	Disabler = vape.Categories.Utility:CreateModule({
-		Name = 'Disabler',
-    Tooltip = 'report disabler?',
-		Function = function(callback)
-			if callback then
-				Dependencies.Paths.AimbotDtc.Parent = nil
-				Dependencies.Paths.SendReport.Parent = nil
-			else
-				Dependencies.Paths.AimbotDtc.Parent = ReplicatedStorage.Remotes
-				Dependencies.Paths.SendReport.Parent = ReplicatedStorage.Modules.Knit.Services.NetworkService.RF
-			end
-		end
-	})
-end)
