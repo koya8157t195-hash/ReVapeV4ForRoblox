@@ -150,8 +150,7 @@ local function v_u_59()
     v41.item_name = v47(v48, v49, v46)
     local v50 = v_u_10
     local v51 = v40 + 10
-
-local v52 = buffer.readf32(v50, v51)
+    local v52 = buffer.readf32(v50, v51)
     local v53 = v_u_10
     local v54 = v40 + 14
     local v55 = buffer.readf32(v53, v54)
@@ -305,8 +304,7 @@ local function v_u_179(p106)
             local v120 = math.ldexp(1, v119)
             local v121 = v117 // v120 * v120
             local v122, v123 = math.frexp(v121)
-
-local v124 = v123 + 14
+            local v124 = v123 + 14
             local v125
             if v124 <= 0 then
                 local v126 = v122 * 1024
@@ -439,8 +437,7 @@ local function v_u_213()
         v190 = v188 // 32768 == 1 and (-1 / 0) or (1 / 0)
     elseif v189 == 64512 then
         v190 = (0 / 0)
-
-elseif v189 == 0 then
+    elseif v189 == 0 then
         v190 = 0
     else
         local v191 = v189 % 1024
@@ -589,8 +586,7 @@ local function v_u_363(p214, p215)
             else
                 v258 = v255 * 2048
             end
-
-local v261 = math.round(v258) % 1024 + math.max(v257, 0) * 1024 + (v249 < 0 and 32768 or 0)
+            local v261 = math.round(v258) % 1024 + math.max(v257, 0) * 1024 + (v249 < 0 and 32768 or 0)
             local v262 = v_u_7
             local v263 = v216 + 3
             buffer.writeu16(v262, v263, v261)
@@ -721,8 +717,7 @@ local v261 = math.round(v258) % 1024 + math.max(v257, 0) * 1024 + (v249 < 0 and 
     end
     if v291 > 65504 then
         local v336 = v_u_7
-
-local v337 = v216 + 11
+        local v337 = v216 + 11
         buffer.writeu16(v336, v337, 31744)
     elseif v291 < -65504 then
         local v338 = v_u_7
@@ -871,8 +866,7 @@ local function v_u_425()
     local v397 = Vector3.new(v374, v383, v392)
     local v398 = v_u_10
     local v399 = v364 + 6
-
-local v400 = buffer.readu16(v398, v399)
+    local v400 = buffer.readu16(v398, v399)
     local v401 = v400 % 32768
     local v402
     if v401 == 31744 then
@@ -1029,8 +1023,7 @@ local function v_u_484()
         local v471 = buffer.readu16(v470, v467)
         local v472 = buffer.readstring
         local v473 = v_u_10
-
-local v474 = v_u_9
+        local v474 = v_u_9
         v_u_9 = v_u_9 + v471
         v468.Type = v472(v473, v474, v471)
         local v475 = v469 + 1
@@ -1178,8 +1171,7 @@ local function v_u_563()
         error((("Expected \"Length\" to be larger than 0, got %* instead."):format(v552)))
     end
     if v552 > 50 then
-
-error((("Expected \"Length\" to be smaller than 50, got %* instead."):format(v552)))
+        error((("Expected \"Length\" to be smaller than 50, got %* instead."):format(v552)))
     end
     local v553 = table.create(v552)
     local v554 = v_u_9
@@ -1321,8 +1313,7 @@ local function v_u_666(p612, p613)
         local v637 = v_u_7
         local v638 = v635 + 0
         buffer.writeu16(v637, v638, v636)
-
-v_u_17(v636)
+        v_u_17(v636)
         buffer.writestring(v_u_7, v_u_5, p612.sigma, v636)
     end
     local v639 = v_u_7
@@ -1477,8 +1468,7 @@ if not v2:IsRunning() then
             ["invoke"] = v720
         },
         ["spawn_dropped_item"] = {
-
-["iter"] = v720,
+            ["iter"] = v720,
             ["next"] = v720
         },
         ["delete_dropped_item"] = {
@@ -1646,8 +1636,7 @@ v_u_727.OnClientEvent:Connect(function(p733, p734)
         local v739 = buffer.readu8(v737, v738)
         if v739 == 0 then
             local v740 = v_u_9
-
-v_u_9 = v_u_9 + 4
+            v_u_9 = v_u_9 + 4
             local v741 = v_u_10
             local v742 = v740 + 0
             local v743 = buffer.readu32(v741, v742)
@@ -1770,8 +1759,7 @@ v_u_9 = v_u_9 + 4
             v_u_9 = v_u_9 + v776
             local v780 = v777(v778, v779, v776)
             if v_u_19.Reliable[9] == nil then
-
-if #v_u_20.Reliable[9] > 256 then
+                if #v_u_20.Reliable[9] > 256 then
                     warn("[Blink]: Event queue of \"token_found\" exceeded 256, did you forget to implement a listener?")
                 end
                 local v781 = v_u_20.Reliable[9]
@@ -1883,8 +1871,7 @@ if #v_u_20.Reliable[9] > 256 then
             local v828 = v_u_10
             local v829 = v827 + 0
             local v830 = buffer.readu8(v828, v829)
-
-if v_u_18[v830] ~= nil then
+            if v_u_18[v830] ~= nil then
                 local v836, v837 = pcall(function()
                     -- upvalues: (ref) v_u_9, (ref) v_u_10
                     local v831 = v_u_9
@@ -1995,8 +1982,7 @@ if v_u_18[v830] ~= nil then
             local v869 = v_u_9
             v_u_9 = v_u_9 + 1
             local v870 = v_u_10
-
-local v871 = v869 + 0
+            local v871 = v869 + 0
             local v872 = buffer.readu8(v870, v871)
             if v_u_18[v872] ~= nil then
                 local v873, v874 = pcall(function()
@@ -2126,8 +2112,7 @@ local v949 = {
                     v911 = nil
                 else
                     v909.head = v910.next
-
-v911 = v910.value
+                    v911 = v910.value
                 end
                 if v911 ~= nil then
                     local v912 = v_u_907
@@ -2191,7 +2176,7 @@ v911 = v910.value
             return function()
                 -- upvalues: (ref) v_u_928, (copy) v_u_929
                 v_u_928 = v_u_928 + 1
-                local v930 = v_u_928
+                local v930 = v_u_929
                 local v931 = v930.head
                 local v932
                 if v931 == nil then
@@ -2265,8 +2250,7 @@ local v1042 = {
             v_u_84(p950)
         end
     },
-
-["device_type_received"] = {
+    ["device_type_received"] = {
         ["on"] = function(p951)
             -- upvalues: (copy) v_u_19, (copy) v_u_20
             v_u_19.Reliable[7] = p951
@@ -2396,8 +2380,7 @@ local v1042 = {
             local v977 = {
                 ["Size"] = v_u_4,
                 ["Cursor"] = v_u_6,
-
-["Buffer"] = v_u_7,
+                ["Buffer"] = v_u_7,
                 ["Instances"] = v_u_8
             }
             v_u_4 = 64
@@ -2530,8 +2513,7 @@ local v1042 = {
             buffer.writeu8(v1010, v1011, 14)
             local v1012 = v_u_7
             local v1013 = v1009 + 1
-
-buffer.writeu8(v1012, v1013, p1008)
+            buffer.writeu8(v1012, v1013, p1008)
         end
     },
     ["system_message"] = {
@@ -2665,8 +2647,7 @@ buffer.writeu8(v1012, v1013, p1008)
         ["on"] = function(p1037)
             -- upvalues: (copy) v_u_19, (copy) v_u_20
             v_u_19.Reliable[25] = p1037
-
-for _, v1038 in v_u_20.Reliable[25] do
+            for _, v1038 in v_u_20.Reliable[25] do
                 p1037(table.unpack(v1038))
             end
             v_u_20.Reliable[25] = {}
@@ -2798,8 +2779,7 @@ local v1071 = {
     },
     ["unequip_armour"] = {
         ["fire"] = function(p1070)
-
--- upvalues: (copy) v_u_719
+            -- upvalues: (copy) v_u_719
             v_u_719(p1070)
         end
     }
