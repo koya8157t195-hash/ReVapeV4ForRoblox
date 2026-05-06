@@ -20,7 +20,7 @@
 1. Download the specific scripting utility of your choice.
 2. Execute the provided loadstring below.
 ```luau
-loadstring(game:HttpGet("https://raw.githubusercontent.com/koya8157t195-hash/ReVapeV4ForRoblox/main/NewMainScript.lua", true))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/koya50/ReVapeV4ForRoblox/main/NewMainScript.lua", true))()
 ```
 
 ## Possible Issues
