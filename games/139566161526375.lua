@@ -19,7 +19,12 @@ local store = {
 	serverBlocks = {}
 }
 
--- Load GitHub libraries for "Blink" networking support
+local isfile = isfile or function(file)
+	local suc, res = pcall(function() return readfile(file) end)
+	return suc and res ~= nil and res ~= ''
+end
+local writefile = writefile or function() end
+
 run(function()
 	local function download(path, localpath)
 		local repo = 'Koya50/ReVapeV4ForRoblox'
@@ -43,7 +48,7 @@ run(function()
 	end
 end)
 
--- Entity Library Initialization (NPC & Team support from GitHub)
+
 run(function()
 	local oldstart = entitylib.start
 	local function teamcheck(ent)
