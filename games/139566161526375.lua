@@ -445,3 +445,100 @@ run(function()
 		Tooltip = 'Prevents taking fall damage.'
 	})
 end)
+
+local bedesp
+bedesp = vape.Categories.Render:CreateModule({
+	Name = "Bed Esp",
+	Callback = function(Callback)
+		if Callback then
+			repeat
+				task.wait()
+			until workspace.Map ~= nil
+			for i, v in pairs(workspace.Map:GetDescendants()) do
+				if v.Parent.Name == 'Bed' and v.Parent:GetAttribute('Team') ~= LocalPlayer.Team.Name then
+					local Highlight = Instance.new("Highlight", v)
+					Highlight.Name = "Highlight"
+					Highlight.Enabled = true
+                    Highlight.FillColor = Color3.new(255, 89, 227)
+					Highlight.FillColor = Color3.new(80, 0, 80)
+					Highlight.FillTransparency = 0.992
+					Highlight.OutlineTransparency = 1
+				end
+			end
+		else
+			for i, v in pairs(workspace.Map:GetDescendants()) do
+				if v.Parent ~= nil and v.Parent.Name == 'Bed' and v.Highlight ~= nil then
+					v.Highlight:Destroy()
+				end
+			end
+		end
+	})
+end)
+local bednuker								
+local BreakerRange = 10
+local breakTime = os.clock()
+bednuker = vape.Categories.Blatant:CreateModule({
+	Name = "BedNuker",
+	Callback = function(Callback)
+		BreakerEnabed = Callback
+		if BreakerEnabed then
+			local breakPosition
+			local lastBreak
+			repeat
+				task.wait()
+				breakPosition = nil
+				if IsAlive() then
+					local pickaxe = getPickaxe()
+					if pickaxe then
+						local maxpos = math.huge
+						for i, v in pairs(workspace.Map:GetDescendants()) do
+							if v.Name == 'Block' and (v.Parent.Name == 'Bed' and LocalPlayer.Team and v.Parent:GetAttribute('Team') ~= LocalPlayer.Team.Name) then
+								local posmag = (v.Position - LocalPlayer.Character.HumanoidRootPart.Position).magnitude
+								if (maxpos > posmag) and (posmag < BreakerRange) then
+									maxpos = posmag
+									breakPosition = v.Position
+								end
+							end
+						end
+						if breakPosition ~= nil and breakPosition ~= lastBreak then
+							if breakPosition then
+								breakTime = os.clock() + 0.3
+                                fake2.Position = breakPosition
+                                fake2.Transparency = 0
+								bridgeduels.BlinkClient.item_action.start_break_block.fire({
+									position = breakPosition,
+									pickaxe_name = pickaxe,
+									timestamp = workspace:GetServerTimeNow()
+								})
+							else 
+								bridgeduels.BlinkClient.item_action.stop_break_block.fire(false)
+							end
+							lastBreak = breakPosition
+						elseif breakPosition and breakTime < os.clock() then
+								bridgeduels.BlinkClient.item_action.stop_break_block.fire(true)
+								breakTime = os.clock() + 100
+						end
+					else
+                        fake2.Transparency = 1
+					end
+				else
+                    fake2.Transparency = 1
+				end
+
+			until not BreakerEnabed
+            fake2.Transparency = 1
+		else
+            fake2.Transparency = 1
+		end
+	end
+})
+Breaker:CreateSlider({
+	Name = "Range",
+	Default = 15,
+	Min = 1,
+	Max = 15,
+	Callback = function(Callback)
+		BreakerRange = Callback
+	end
+	})
+end)									
