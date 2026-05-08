@@ -446,34 +446,51 @@ run(function()
 	})
 end)
 
-local bedesp
-bedesp = vape.Categories.Render:CreateModule({
-	Name = "Bed Esp",
-	Callback = function(Callback)
-		if Callback then
-			repeat
-				task.wait()
-			until workspace.Map ~= nil
-			for i, v in pairs(workspace.Map:GetDescendants()) do
-				if v.Parent.Name == 'Bed' and v.Parent:GetAttribute('Team') ~= LocalPlayer.Team.Name then
-					local Highlight = Instance.new("Highlight", v)
-					Highlight.Name = "Highlight"
-					Highlight.Enabled = true
-                    Highlight.FillColor = Color3.new(255, 89, 227)
-					Highlight.FillColor = Color3.new(80, 0, 80)
-					Highlight.FillTransparency = 0.992
-					Highlight.OutlineTransparency = 1
-				end
-			end
-		else
-			for i, v in pairs(workspace.Map:GetDescendants()) do
-				if v.Parent ~= nil and v.Parent.Name == 'Bed' and v.Highlight ~= nil then
-					v.Highlight:Destroy()
-				end
-			end
-		end
-	})
+run(function()
+    local bedesp
+    local lplr = game:GetService("Players").LocalPlayer
+
+    bedesp = vape.Categories.Render:CreateModule({
+        Name = "Bed Esp",
+        Function = function(enabled)
+            if enabled then
+                task.spawn(function()
+                    repeat task.wait() until workspace:FindFirstChild("Map")
+
+                    while bedesp.Enabled do
+                        for _, v in pairs(workspace.Map:GetDescendants()) do
+                            if v:IsA("BasePart") and v.Parent and v.Parent.Name == "Bed" then
+                                local team = v.Parent:GetAttribute("Team")
+
+                                if team and lplr.Team and team ~= lplr.Team.Name then
+                                    if not v:FindFirstChild("BedHighlight") then
+                                        local h = Instance.new("Highlight")
+                                        h.Name = "BedHighlight"
+                                        h.Adornee = v
+                                        h.FillColor = Color3.fromRGB(80, 0, 80)
+                                        h.FillTransparency = 0.5
+                                        h.OutlineTransparency = 0
+                                        h.Parent = v
+                                    end
+                                end
+                            end
+                        end
+                        task.wait(1)
+                    end
+                end)
+            else
+                if workspace:FindFirstChild("Map") then
+                    for _, v in pairs(workspace.Map:GetDescendants()) do
+                        if v:FindFirstChild("BedHighlight") then
+                            v.BedHighlight:Destroy()
+                        end
+                    end
+                end
+            end
+        end
+    })
 end)
+
 local bednuker								
 local BreakerRange = 10
 local breakTime = os.clock()
