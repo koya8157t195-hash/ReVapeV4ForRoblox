@@ -491,71 +491,91 @@ run(function()
     })
 end)
 
-local bednuker								
-local BreakerRange = 10
-local breakTime = os.clock()
-bednuker = vape.Categories.Blatant:CreateModule({
-	Name = "BedNuker",
-	Callback = function(Callback)
-		BreakerEnabed = Callback
-		if BreakerEnabed then
-			local breakPosition
-			local lastBreak
-			repeat
-				task.wait()
-				breakPosition = nil
-				if IsAlive() then
-					local pickaxe = getPickaxe()
-					if pickaxe then
-						local maxpos = math.huge
-						for i, v in pairs(workspace.Map:GetDescendants()) do
-							if v.Name == 'Block' and (v.Parent.Name == 'Bed' and LocalPlayer.Team and v.Parent:GetAttribute('Team') ~= LocalPlayer.Team.Name) then
-								local posmag = (v.Position - LocalPlayer.Character.HumanoidRootPart.Position).magnitude
-								if (maxpos > posmag) and (posmag < BreakerRange) then
-									maxpos = posmag
-									breakPosition = v.Position
-								end
-							end
-						end
-						if breakPosition ~= nil and breakPosition ~= lastBreak then
-							if breakPosition then
-								breakTime = os.clock() + 0.3
-                                fake2.Position = breakPosition
-                                fake2.Transparency = 0
-								bridgeduels.BlinkClient.item_action.start_break_block.fire({
-									position = breakPosition,
-									pickaxe_name = pickaxe,
-									timestamp = workspace:GetServerTimeNow()
-								})
-							else 
-								bridgeduels.BlinkClient.item_action.stop_break_block.fire(false)
-							end
-							lastBreak = breakPosition
-						elseif breakPosition and breakTime < os.clock() then
-								bridgeduels.BlinkClient.item_action.stop_break_block.fire(true)
-								breakTime = os.clock() + 100
-						end
-					else
-                        fake2.Transparency = 1
-					end
-				else
-                    fake2.Transparency = 1
-				end
+run(function()
+    local bednuker
+    local lplr = game:GetService("Players").LocalPlayer
 
-			until not BreakerEnabed
-            fake2.Transparency = 1
-		else
-            fake2.Transparency = 1
-		end
-	end
-})
-Breaker:CreateSlider({
-	Name = "Range",
-	Default = 15,
-	Min = 1,
-	Max = 15,
-	Callback = function(Callback)
-		BreakerRange = Callback
-	end
-	})
-end)									
+    local BreakerRange = 10
+    local breakTime = 0
+
+    bednuker = vape.Categories.Blatant:CreateModule({
+        Name = "BedNuker",
+        Function = function(enabled)
+            if enabled then
+                task.spawn(function()
+                    local lastBreak
+
+                    while bednuker.Enabled do
+                        task.wait()
+
+                        local breakPosition = nil
+
+                        if IsAlive() and lplr.Character and lplr.Character:FindFirstChild("HumanoidRootPart") then
+                            local root = lplr.Character.HumanoidRootPart
+                            local pickaxe = getPickaxe()
+
+                            if pickaxe then
+                                local closest = math.huge
+
+                                for _, v in pairs(workspace.Map:GetDescendants()) do
+                                    if v:IsA("BasePart") and v.Name == "Block" and v.Parent and v.Parent.Name == "Bed" then
+                                        local team = v.Parent:GetAttribute("Team")
+
+                                        if team and lplr.Team and team ~= lplr.Team.Name then
+                                            local dist = (v.Position - root.Position).Magnitude
+
+                                            if dist < BreakerRange and dist < closest then
+                                                closest = dist
+                                                breakPosition = v.Position
+                                            end
+                                        end
+                                    end
+                                end
+
+                                if breakPosition and breakPosition ~= lastBreak then
+                                    breakTime = os.clock() + 0.3
+
+                                    if fake2 then
+                                        fake2.Position = breakPosition
+                                        fake2.Transparency = 0
+                                    end
+
+                                    bridgeduels.BlinkClient.item_action.start_break_block.fire({
+                                        position = breakPosition,
+                                        pickaxe_name = pickaxe,
+                                        timestamp = workspace:GetServerTimeNow()
+                                    })
+
+                                    lastBreak = breakPosition
+
+                                elseif breakPosition and os.clock() > breakTime then
+                                    bridgeduels.BlinkClient.item_action.stop_break_block.fire(true)
+                                    breakTime = os.clock() + 100
+                                end
+                            else
+                                if fake2 then fake2.Transparency = 1 end
+                            end
+                        else
+                            if fake2 then fake2.Transparency = 1 end
+                        end
+                    end
+
+                    -- cleanup on disable
+                    if fake2 then fake2.Transparency = 1 end
+                end)
+            else
+                if fake2 then fake2.Transparency = 1 end
+            end
+        end
+    })
+
+    bednuker:CreateSlider({
+        Name = "Range",
+        Default = 10,
+        Min = 1,
+        Max = 15,
+        Function = function(val)
+            BreakerRange = val
+        end
+    })
+end)
