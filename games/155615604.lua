@@ -43,7 +43,7 @@ local vm = loadstring(downloadFile('newvape/libraries/vm.lua'), 'vm')()
 
 run(function()
 	local charConnection
-  local GunModifications
+    local GunModifications
 	local function mod(v)
 		if v:IsA("Tool") and v:GetAttribute("FireRate") then
 			v:SetAttribute("FireRate", 0.03)
@@ -67,4 +67,27 @@ GunModifications = vape.Categories.Combat:CreateModule({
 		end,
 		Tooltip = 'Modifies gun attributes.'
 	})
+end)
+
+run(function()
+    local DeleteAntiJump
+
+    DeleteAntiJump = vape.Categories.World:CreateModule({
+        Name = 'Delete AntiJump',
+        Function = function(callback)
+            if callback then
+                local model = workspace:FindFirstChild(lplr)
+
+                if model and model:IsA('Model') then
+                    local antiJumpScript = model:FindFirstChild('AntiJump', true)
+                    if antiJumpScript and antiJumpScript:IsA('LocalScript') then
+                        antiJumpScript:Destroy()
+                    end
+                end
+
+                DeleteAntiJump:Toggle()
+            end
+        end,
+        Tooltip = 'Auto-detects your name and deletes the AntiJump LocalScript'
+    })
 end)
