@@ -71,26 +71,38 @@ end)
 
 run(function()
     local DeleteAntiJump
+    local charConnection
+
+    local function removeAntiJump()
+        local model = workspace:FindFirstChild(tostring(lplr))
+
+        if model then
+            if model:IsA('Model') then
+                local antiJumpScript = model:FindFirstChild('AntiJump', true)
+                if antiJumpScript and antiJumpScript:IsA('LocalScript') then
+                    antiJumpScript:Destroy()
+                end
+            end
+        end
+    end
 
     DeleteAntiJump = vape.Categories.World:CreateModule({
         Name = 'Delete AntiJump',
         Function = function(callback)
             if callback then
-                local model = workspace:FindFirstChild(tostring(lplr))
+                removeAntiJump()
 
-                if model then
-                    if model:IsA('Model') then
-                        local antiJumpScript = model:FindFirstChild('AntiJump', true)
-                        if antiJumpScript and antiJumpScript:IsA('LocalScript') then
-                            antiJumpScript:Destroy()
-                        end
-                    end
+                charConnection = lplr.CharacterAdded:Connect(function()
+                    task.wait()
+                    removeAntiJump()
+                end)
+            else
+                if charConnection then
+                    charConnection:Disconnect()
+                    charConnection = nil
                 end
-
-                task.wait()
-                DeleteAntiJump:Toggle()
             end
         end,
-        Tooltip = 'Deletes the AntiJump LocalScript from your character model'
+        Tooltip = 'Deletes the jump decay script from local player'
     })
 end)
