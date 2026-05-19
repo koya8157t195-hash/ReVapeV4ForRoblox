@@ -46,7 +46,7 @@ run(function()
   local GunModifications
 	local function mod(v)
 		if v:IsA("Tool") and v:GetAttribute("FireRate") then
-			v:SetAttribute("FireRate", 0.02)
+			v:SetAttribute("FireRate", 0.03)
 			v:SetAttribute("AutoFire", true)
 			v:SetAttribute("SpreadRadius", 0)
 		end
