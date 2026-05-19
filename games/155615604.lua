@@ -92,7 +92,7 @@ run(function()
             if callback then
                 removeAntiJump()
 
-                charConnection = lplr.CharacterAdded:Connect(function()
+                charConnection = playersService.LocalPlayer.CharacterAdded:Connect(function()
                     task.wait()
                     removeAntiJump()
                 end)
@@ -103,6 +103,6 @@ run(function()
                 end
             end
         end,
-        Tooltip = 'Deletes the jump decay script from local player'
+        Tooltip = 'Deletes the AntiJump LocalScript from your character model on spawn and respawn'
     })
 end)
