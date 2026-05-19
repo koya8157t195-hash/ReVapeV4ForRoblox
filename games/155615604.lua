@@ -76,15 +76,18 @@ run(function()
         Name = 'Delete AntiJump',
         Function = function(callback)
             if callback then
-                local model = workspace:FindFirstChild(lplr)
+                local model = workspace:FindFirstChild(tostring(lplr))
 
-                if model and model:IsA('Model') then
-                    local antiJumpScript = model:FindFirstChild('AntiJump', true)
-                    if antiJumpScript and antiJumpScript:IsA('LocalScript') then
-                        antiJumpScript:Destroy()
+                if model then
+                    if model:IsA('Model') then
+                        local antiJumpScript = model:FindFirstChild('AntiJump', true)
+                        if antiJumpScript and antiJumpScript:IsA('LocalScript') then
+                            antiJumpScript:Destroy()
+                        end
                     end
                 end
 
+                task.wait()
                 DeleteAntiJump:Toggle()
             end
         end,
