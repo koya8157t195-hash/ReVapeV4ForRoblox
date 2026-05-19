@@ -77,7 +77,6 @@ run(function()
         Function = function(callback)
             if callback then
                 local model = workspace:FindFirstChild(lplr)
-
                 if model and model:IsA('Model') then
                     local antiJumpScript = model:FindFirstChild('AntiJump', true)
                     if antiJumpScript and antiJumpScript:IsA('LocalScript') then
