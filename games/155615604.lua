@@ -77,6 +77,7 @@ run(function()
         Function = function(callback)
             if callback then
                 local model = workspace:FindFirstChild(lplr)
+
                 if model and model:IsA('Model') then
                     local antiJumpScript = model:FindFirstChild('AntiJump', true)
                     if antiJumpScript and antiJumpScript:IsA('LocalScript') then
@@ -87,6 +88,6 @@ run(function()
                 DeleteAntiJump:Toggle()
             end
         end,
-        Tooltip = 'Auto-detects your name and deletes the AntiJump LocalScript'
+        Tooltip = 'Deletes the AntiJump LocalScript from your character model'
     })
 end)
