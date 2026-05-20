@@ -45,31 +45,63 @@ local function notif(...)
 end
 
 run(function()
-	local charConnection
     local GunModifications
-	local function mod(v)
-		if v:IsA("Tool") and v:GetAttribute("FireRate") then
-			v:SetAttribute("FireRate", 0.03)
-			v:SetAttribute("AutoFire", true)
-			v:SetAttribute("SpreadRadius", 0)
-		end
-	end
+    local charConnection
+    local backpackConnection
 
-GunModifications = vape.Categories.Combat:CreateModule({
-		Name = 'GunModifications',
-		Function = function(callback)
-			if callback then
-				for _, v in pairs(lplr.Backpack:GetChildren()) do mod(v) end
-				if lplr.Character then
-					for _, v in pairs(lplr.Character:GetChildren()) do mod(v) end
-					charConnection = lplr.Character.ChildAdded:Connect(mod)
-				end
-			else
-				if charConnection then charConnection:Disconnect() charConnection = nil end
-			end
-		end,
-		Tooltip = 'Modifies gun attributes.'
-	})
+    local function mod(v)
+        if v:IsA('Tool') and v:GetAttribute('FireRate') then
+            v:SetAttribute('FireRate', 0.03)
+            v:SetAttribute('AutoFire', true)
+            v:SetAttribute('SpreadRadius', 0)
+        end
+    end
+
+    local function modAll()
+        -- Mod tools in backpack
+        local backpack = playersService.LocalPlayer:FindFirstChild('Backpack')
+        if backpack then
+            for _, v in pairs(backpack:GetChildren()) do
+                mod(v)
+            end
+        end
+
+        -- Mod tools in character
+        local char = playersService.LocalPlayer.Character
+        if char then
+            for _, v in pairs(char:GetChildren()) do
+                mod(v)
+            end
+        end
+    end
+
+    GunModifications = vape.Categories.Combat:CreateModule({
+        Name = 'GunModifications',
+        Function = function(callback)
+            if callback then
+                modAll()
+
+                charConnection = playersService.LocalPlayer.CharacterAdded:Connect(function(char)
+                    for _, v in pairs(char:GetChildren()) do
+                        mod(v)
+                    end
+                    charConnection = char.ChildAdded:Connect(mod)
+                end)
+
+                backpackConnection = playersService.LocalPlayer.Backpack.ChildAdded:Connect(mod)
+            else
+                if charConnection then
+                    charConnection:Disconnect()
+                    charConnection = nil
+                end
+                if backpackConnection then
+                    backpackConnection:Disconnect()
+                    backpackConnection = nil
+                end
+            end
+        end,
+        Tooltip = 'Modifications to empower the firearm'
+    })
 end)
 
 run(function()
