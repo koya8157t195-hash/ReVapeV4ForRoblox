@@ -587,51 +587,40 @@ run(function()
                     while KillPlayer.Enabled do
                         local target = playersService:FindFirstChild(targetName)
                         if not target then
-                            task.wait(0.2)
+                            task.wait(0.3)
                             continue
                         end
 
                         local targetChar = target.Character
                         if not targetChar or not targetChar:FindFirstChild('HumanoidRootPart') or not targetChar:FindFirstChild('Head') then
-                            task.wait(0.2)
+                            task.wait(0.3)
                             continue
                         end
 
                         local char = playersService.LocalPlayer.Character
                         if not char or not char:FindFirstChild('HumanoidRootPart') then
-                            task.wait(0.2)
+                            task.wait(0.3)
                             continue
                         end
 
                         local targetRoot = targetChar.HumanoidRootPart
-                        local targetHead = targetChar.Head
-                        local headPos = targetHead.Position
 
                         -- Teleport 1 stud behind them
                         char.HumanoidRootPart.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1)
-                        task.wait(0.05)
 
-                        -- Redirect raycast to head and click
-                        local oldRaycast = workspace.Raycast
-                        workspace.Raycast = function(_, rayOrigin, rayDirection, rayParams)
-                            local newDirection = CFrame.lookAt(rayOrigin, headPos).LookVector * rayDirection.Magnitude
-                            local whitelist = RaycastParams.new()
-                            whitelist.FilterType = Enum.RaycastFilterType.Include
-                            whitelist.FilterDescendantsInstances = {targetHead}
-                            return oldRaycast(workspace, rayOrigin, newDirection, whitelist)
-                        end
+                        -- Click to shoot
+                        task.spawn(function()
+                            mouse1press()
+                            task.wait(0.08)
+                            mouse1release()
+                        end)
 
-                        mouse1press()
-                        task.wait(0.05)
-                        mouse1release()
-                        workspace.Raycast = oldRaycast
-
-                        task.wait(0.05)
+                        task.wait(0.3)
                     end
                 end)
             end
         end,
-        Tooltip = 'Teleports 1 stud behind the selected player and clicks to shoot them'
+        Tooltip = 'Teleports 1 stud behind the selected player and clicks to shoot'
     })
 
     TargetDropdown = KillPlayer:CreateDropdown({
