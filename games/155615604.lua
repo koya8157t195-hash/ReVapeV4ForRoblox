@@ -607,34 +607,31 @@ run(function()
                         local targetHead = targetChar.Head
                         local headPos = targetHead.Position
 
-                        -- Teleport right inside them
-                        char.HumanoidRootPart.CFrame = targetRoot.CFrame
+                        -- Teleport 1 stud behind them
+                        char.HumanoidRootPart.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1)
                         task.wait(0.05)
 
-                        -- Shoot gun directly at head
-                        local tool = char:FindFirstChildOfClass('Tool')
-                        if tool and tool:FindFirstChild('Ammo') then
-                            local oldRaycast = workspace.Raycast
-                            workspace.Raycast = function(_, rayOrigin, rayDirection, rayParams)
-                                local newDirection = CFrame.lookAt(rayOrigin, headPos).LookVector * rayDirection.Magnitude
-                                local whitelist = RaycastParams.new()
-                                whitelist.FilterType = Enum.RaycastFilterType.Include
-                                whitelist.FilterDescendantsInstances = {targetHead}
-                                return oldRaycast(workspace, rayOrigin, newDirection, whitelist)
-                            end
-
-                            tool:Activate()
-                            task.wait(0.05)
-                            tool:Deactivate()
-                            workspace.Raycast = oldRaycast
+                        -- Redirect raycast to head and click
+                        local oldRaycast = workspace.Raycast
+                        workspace.Raycast = function(_, rayOrigin, rayDirection, rayParams)
+                            local newDirection = CFrame.lookAt(rayOrigin, headPos).LookVector * rayDirection.Magnitude
+                            local whitelist = RaycastParams.new()
+                            whitelist.FilterType = Enum.RaycastFilterType.Include
+                            whitelist.FilterDescendantsInstances = {targetHead}
+                            return oldRaycast(workspace, rayOrigin, newDirection, whitelist)
                         end
+
+                        mouse1press()
+                        task.wait(0.05)
+                        mouse1release()
+                        workspace.Raycast = oldRaycast
 
                         task.wait(0.05)
                     end
                 end)
             end
         end,
-        Tooltip = 'Teleports inside the selected player and shoots them point blank'
+        Tooltip = 'Teleports 1 stud behind the selected player and clicks to shoot them'
     })
 
     TargetDropdown = KillPlayer:CreateDropdown({
