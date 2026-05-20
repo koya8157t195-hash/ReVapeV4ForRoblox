@@ -576,6 +576,44 @@ run(function()
         TargetDropdown:SetValue(list[1])
     end
 
+    local function silentShoot(targetPos)
+        local char = playersService.LocalPlayer.Character
+        if not char then return end
+
+        local tool = char:FindFirstChildOfClass('Tool')
+        if not tool then return end
+
+        local root = char:FindFirstChild('HumanoidRootPart')
+        if not root then return end
+
+        local origin = root.Position
+        local direction = CFrame.lookAt(origin, targetPos).LookVector
+
+        -- Hook the Raycast to redirect
+        local oldRaycast = workspace.Raycast
+        local function hookedRaycast(_, rayOrigin, rayDirection, rayParams)
+            local newDirection = CFrame.lookAt(rayOrigin, targetPos).LookVector * rayDirection.Magnitude
+            local whitelist = RaycastParams.new()
+            whitelist.FilterType = Enum.RaycastFilterType.Include
+
+            local targetChar = playersService:FindFirstChild(TargetDropdown.Value)
+            if targetChar and targetChar.Character then
+                local targetRoot = targetChar.Character:FindFirstChild('HumanoidRootPart')
+                if targetRoot then
+                    whitelist.FilterDescendantsInstances = {targetRoot}
+                end
+            end
+
+            return oldRaycast(workspace, rayOrigin, newDirection, whitelist)
+        end
+
+        workspace.Raycast = hookedRaycast
+        mouse1press()
+        task.wait(0.05)
+        mouse1release()
+        workspace.Raycast = oldRaycast
+    end
+
     KillPlayer = vape.Categories.Combat:CreateModule({
         Name = 'Kill Player',
         Function = function(callback)
@@ -583,41 +621,42 @@ run(function()
                 local targetName = TargetDropdown.Value
                 if targetName == 'No players' then return end
 
-                local target = playersService:FindFirstChild(targetName)
-                if not target then return end
-
-                local char = playersService.LocalPlayer.Character
-                if not char or not char:FindFirstChild('HumanoidRootPart') then return end
-
-                local root = char.HumanoidRootPart
-
                 task.spawn(function()
                     while KillPlayer.Enabled do
+                        local target = playersService:FindFirstChild(targetName)
+                        if not target then
+                            task.wait(0.2)
+                            continue
+                        end
+
                         local targetChar = target.Character
                         if not targetChar or not targetChar:FindFirstChild('HumanoidRootPart') then
                             task.wait(0.2)
                             continue
                         end
 
+                        local char = playersService.LocalPlayer.Character
+                        if not char or not char:FindFirstChild('HumanoidRootPart') then
+                            task.wait(0.2)
+                            continue
+                        end
+
                         local targetRoot = targetChar.HumanoidRootPart
                         local targetPos = targetRoot.Position
+                        local behindPos = targetRoot.CFrame * CFrame.new(0, 0, 0)
 
-                        -- Teleport above them
-                        root.CFrame = CFrame.new(targetPos.X, targetPos.Y + 15, targetPos.Z)
 
-                        task.wait(0.1)
-
-                        -- Shoot them using silent aim
-                        mouse1press()
+                        char.HumanoidRootPart.CFrame = behindPos
                         task.wait(0.05)
-                        mouse1release()
 
-                        task.wait(0.1)
+
+                        silentShoot(targetPos)
+                        task.wait(0.05)
                     end
                 end)
             end
         end,
-        Tooltip = 'Teleports above the selected player and shoots them until they die'
+        Tooltip = 'Teleports behind the selected player and shoots them with built-in silent aim'
     })
 
     TargetDropdown = KillPlayer:CreateDropdown({
