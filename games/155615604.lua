@@ -44,7 +44,7 @@ local function notif(...)
 	return vape:CreateNotification(...)
 end
 
-for _, v in {'AutoClicker', 'Reach', 'MurderMystery', 'AutoRejoin', 'Killaura', 'SilentAim', 'LongJump', 'MouseTP'} do
+for _, v in {'AutoClicker', 'Reach', 'MurderMystery', 'AutoRejoin', 'Killaura', 'SilentAim', 'MouseTP'} do
 	vape:Remove(v)
 end
 
@@ -52,7 +52,6 @@ run(function()
     local SilentAim
     local Target
     local Mode
-    local IgnoredScripts
     local Range
     local HitChance
     local HeadshotChance
@@ -103,14 +102,6 @@ run(function()
                     end
                     if checkcaller() then
                         return oldnamecall(...)
-                    end
-
-                    local calling = getcallingscript()
-                    if calling then
-                        local list = #IgnoredScripts.ListEnabled > 0 and IgnoredScripts.ListEnabled or {'ControlScript', 'ControlModule'}
-                        if table.find(list, tostring(calling)) then
-                            return oldnamecall(...)
-                        end
                     end
 
                     local self, args = ..., {select(2, ...)}
@@ -184,7 +175,6 @@ run(function()
         end,
         Tooltip = 'Mouse - Checks for entities near the mouses position\nPosition - Checks for entities near the local character'
     })
-    IgnoredScripts = SilentAim:CreateTextList({Name = 'Ignored Scripts'})
     Range = SilentAim:CreateSlider({
         Name = 'Range',
         Min = 1,
