@@ -222,14 +222,14 @@ run(function()
                 savedCFrame = playersService.LocalPlayer.Character.HumanoidRootPart.CFrame
                 local remington = workspace:WaitForChild('Prison_ITEMS'):WaitForChild('giver'):WaitForChild('Remington 870'):WaitForChild('Meshes/r870_2')
                 playersService.LocalPlayer.Character.HumanoidRootPart.CFrame = remington.CFrame
-                task.wait(0.5)
+                task.wait(0.1)
                 game:GetService('ReplicatedStorage'):WaitForChild('Remotes'):WaitForChild('InteractWithItem'):InvokeServer(remington)
-                task.wait(0.3)
+                task.wait(0.1)
                 local mp5 = workspace:WaitForChild('Prison_ITEMS'):WaitForChild('giver'):WaitForChild('MP5'):WaitForChild('Meshes/MP5 (2)')
                 playersService.LocalPlayer.Character.HumanoidRootPart.CFrame = mp5.CFrame
-                task.wait(0.5)
+                task.wait(0.1)
                 game:GetService('ReplicatedStorage'):WaitForChild('Remotes'):WaitForChild('InteractWithItem'):InvokeServer(mp5)
-                task.wait(0.3)
+                task.wait(0.1)
                 playersService.LocalPlayer.Character.HumanoidRootPart.CFrame = savedCFrame
                 GunGrabber:Toggle()
             end
