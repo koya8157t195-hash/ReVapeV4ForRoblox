@@ -106,3 +106,49 @@ run(function()
         Tooltip = 'Deletes the AntiJump LocalScript from your character model on spawn and respawn'
     })
 end)
+
+run(function()
+    local Placeteleport
+    local TPLocation
+
+    local function CanTeleport()
+        local char = playersService.LocalPlayer.Character
+        return char and char:FindFirstChild('HumanoidRootPart')
+    end
+
+    local function teleportTo(cframe)
+        if CanTeleport() then
+            playersService.LocalPlayer.Character.HumanoidRootPart.CFrame = cframe
+        end
+    end
+
+    Placeteleport = vape.Categories.World:CreateModule({
+        Name = 'Place teleport',
+        Function = function(callback)
+            if callback then
+                local location = TPLocation.Value
+
+                if location == 'Criminal Base' then
+                    local spawn = workspace:FindFirstChild('Criminals Spawn')
+                    if spawn and spawn:FindFirstChild('SpawnLocation') then
+                        teleportTo(spawn.SpawnLocation.CFrame)
+                    end
+                elseif location == 'Prison' then
+                    teleportTo(CFrame.new(916, 100, 2369))
+                elseif location == 'Guard Room' then
+                    teleportTo(CFrame.new(828, 100, 2303))
+                end
+
+                JailbreakTP:Toggle()
+            end
+        end,
+        Tooltip = 'Teleport to key Jailbreak locations'
+    })
+
+    TPLocation = JailbreakTP:CreateDropdown({
+        Name = 'Location',
+        List = {'Criminal Base', 'Prison', 'Guard Room'},
+        Default = 'Criminal Base',
+        Tooltip = 'Choose where to teleport'
+    })
+end)
