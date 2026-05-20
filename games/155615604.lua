@@ -564,3 +564,83 @@ run(function()
         Tooltip = 'Teleports you down -100 studs while keeping X and Z when tased'
     })
 end)
+
+run(function()
+    local KillPlayer
+    local TargetDropdown
+    local RefreshBtn
+
+    local function getPlayers()
+        local list = {}
+        for _, player in pairs(playersService:GetPlayers()) do
+            if player ~= playersService.LocalPlayer then
+                table.insert(list, player.Name)
+            end
+        end
+        return #list > 0 and list or {'No players'}
+    end
+
+    local function refreshDropdown()
+        local list = getPlayers()
+        TargetDropdown:SetList(list)
+        TargetDropdown:SetValue(list[1])
+    end
+
+    KillPlayer = vape.Categories.Combat:CreateModule({
+        Name = 'Kill Player',
+        Function = function(callback)
+            if callback then
+                local targetName = TargetDropdown.Value
+                if targetName == 'No players' then return end
+
+                local target = playersService:FindFirstChild(targetName)
+                if not target then return end
+
+                local char = playersService.LocalPlayer.Character
+                if not char or not char:FindFirstChild('HumanoidRootPart') then return end
+
+                local root = char.HumanoidRootPart
+
+                task.spawn(function()
+                    while KillPlayer.Enabled do
+                        local targetChar = target.Character
+                        if not targetChar or not targetChar:FindFirstChild('HumanoidRootPart') then
+                            task.wait(0.2)
+                            continue
+                        end
+
+                        local targetRoot = targetChar.HumanoidRootPart
+                        local targetPos = targetRoot.Position
+
+                        -- Teleport above them
+                        root.CFrame = CFrame.new(targetPos.X, targetPos.Y + 15, targetPos.Z)
+
+                        task.wait(0.1)
+
+                        -- Shoot them using silent aim
+                        mouse1press()
+                        task.wait(0.05)
+                        mouse1release()
+
+                        task.wait(0.1)
+                    end
+                end)
+            end
+        end,
+        Tooltip = 'Teleports above the selected player and shoots them until they die'
+    })
+
+    TargetDropdown = KillPlayer:CreateDropdown({
+        Name = 'Target',
+        List = getPlayers(),
+        Default = getPlayers()[1],
+        Tooltip = 'Select the player to kill'
+    })
+
+    RefreshBtn = KillPlayer:CreateButton({
+        Name = 'Refresh Players',
+        Function = function()
+            refreshDropdown()
+        end
+    })
+end)
