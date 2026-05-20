@@ -108,7 +108,7 @@ run(function()
 end)
 
 run(function()
-    local Placeteleport
+    local PlaceTeleportation
     local TPLocation
 
     local function CanTeleport()
@@ -116,14 +116,8 @@ run(function()
         return char and char:FindFirstChild('HumanoidRootPart')
     end
 
-    local function teleportTo(cframe)
-        if CanTeleport() then
-            playersService.LocalPlayer.Character.HumanoidRootPart.CFrame = cframe
-        end
-    end
-
-    Placeteleport = vape.Categories.World:CreateModule({
-        Name = 'Place teleport',
+    PlaceTeleportation = vape.Categories.World:CreateModule({
+        Name = 'Place Teleportation',
         Function = function(callback)
             if callback then
                 local location = TPLocation.Value
@@ -131,21 +125,27 @@ run(function()
                 if location == 'Criminal Base' then
                     local spawn = workspace:FindFirstChild('Criminals Spawn')
                     if spawn and spawn:FindFirstChild('SpawnLocation') then
-                        teleportTo(spawn.SpawnLocation.CFrame)
+                        if CanTeleport() then
+                            playersService.LocalPlayer.Character.HumanoidRootPart.CFrame = spawn.SpawnLocation.CFrame
+                        end
                     end
                 elseif location == 'Prison' then
-                    teleportTo(CFrame.new(916, 100, 2369))
+                    if CanTeleport() then
+                        playersService.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(916, 100, 2369)
+                    end
                 elseif location == 'Guard Room' then
-                    teleportTo(CFrame.new(828, 100, 2303))
+                    if CanTeleport() then
+                        playersService.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(828, 100, 2303)
+                    end
                 end
 
-                JailbreakTP:Toggle()
+                PlaceTeleportation:Toggle()
             end
         end,
         Tooltip = 'Teleport to key Jailbreak locations'
     })
 
-    TPLocation = JailbreakTP:CreateDropdown({
+    TPLocation = PlaceTeleportation:CreateDropdown({
         Name = 'Location',
         List = {'Criminal Base', 'Prison', 'Guard Room'},
         Default = 'Criminal Base',
