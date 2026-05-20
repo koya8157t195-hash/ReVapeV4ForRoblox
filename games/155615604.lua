@@ -40,6 +40,9 @@ local targetinfo = vape.Libraries.targetinfo
 local sessioninfo = vape.Libraries.sessioninfo
 local vm = loadstring(downloadFile('newvape/libraries/vm.lua'), 'vm')()
 
+local function notif(...)
+	return vape:CreateNotification(...)
+end
 
 run(function()
 	local charConnection
