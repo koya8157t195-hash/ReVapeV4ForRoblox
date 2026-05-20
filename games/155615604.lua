@@ -201,3 +201,38 @@ run(function()
         Tooltip = 'Choose where to teleport'
     })
 end)
+
+run(function()
+    local GunGrabber
+    local savedCFrame
+
+    local function CanTeleport()
+        local char = playersService.LocalPlayer.Character
+        return char and char:FindFirstChild('HumanoidRootPart')
+    end
+
+    GunGrabber = vape.Categories.World:CreateModule({
+        Name = 'Gun Grabber',
+        Function = function(callback)
+            if callback then
+                if not CanTeleport() then
+                    GunGrabber:Toggle()
+                    return
+                end
+                savedCFrame = playersService.LocalPlayer.Character.HumanoidRootPart.CFrame
+                local remington = workspace:WaitForChild('Prison_ITEMS'):WaitForChild('giver'):WaitForChild('Remington 870'):WaitForChild('Meshes/r870_2')
+                playersService.LocalPlayer.Character.HumanoidRootPart.CFrame = remington.CFrame
+                task.wait()
+                game:GetService('ReplicatedStorage'):WaitForChild('Remotes'):WaitForChild('InteractWithItem'):InvokeServer(remington)
+                local mp5 = workspace:WaitForChild('Prison_ITEMS'):WaitForChild('giver'):WaitForChild('MP5'):WaitForChild('Meshes/MP5 (2)')
+                playersService.LocalPlayer.Character.HumanoidRootPart.CFrame = mp5.CFrame
+                task.wait()
+                game:GetService('ReplicatedStorage'):WaitForChild('Remotes'):WaitForChild('InteractWithItem'):InvokeServer(mp5)
+                task.wait()
+                playersService.LocalPlayer.Character.HumanoidRootPart.CFrame = savedCFrame
+                GunGrabber:Toggle()
+            end
+        end,
+        Tooltip = 'Grabs Remington 870 and MP5 then returns you back'
+    })
+end)
