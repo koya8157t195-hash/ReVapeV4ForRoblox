@@ -111,24 +111,36 @@ run(function()
     local function removeAntiJump()
         local model = workspace:FindFirstChild(tostring(lplr))
 
-        if model then
-            if model:IsA('Model') then
-                local antiJumpScript = model:FindFirstChild('AntiJump', true)
-                if antiJumpScript and antiJumpScript:IsA('LocalScript') then
-                    antiJumpScript:Destroy()
-                end
+        if model and model:IsA('Model') then
+            local antiJumpScript = model:FindFirstChild('AntiJump', true)
+            if antiJumpScript and antiJumpScript:IsA('LocalScript') then
+                antiJumpScript:Destroy()
+            end
+        end
+
+        -- Also check StarterCharacterScripts
+        local char = playersService.LocalPlayer.Character
+        if char then
+            local antiJumpScript = char:FindFirstChild('AntiJump', true)
+            if antiJumpScript and antiJumpScript:IsA('LocalScript') then
+                antiJumpScript:Destroy()
             end
         end
     end
 
     DeleteAntiJump = vape.Categories.World:CreateModule({
-        Name = 'Delete AntiJump',
+        Name = 'Anitjump disabler :3',
         Function = function(callback)
             if callback then
                 removeAntiJump()
 
-                charConnection = playersService.LocalPlayer.CharacterAdded:Connect(function()
-                    task.wait()
+                charConnection = playersService.LocalPlayer.CharacterAdded:Connect(function(char)
+                    char.ChildAdded:Connect(function(child)
+                        if child.Name == 'AntiJump' and child:IsA('LocalScript') then
+                            child:Destroy()
+                        end
+                    end)
+                    task.wait(0.5)
                     removeAntiJump()
                 end)
             else
@@ -138,7 +150,7 @@ run(function()
                 end
             end
         end,
-        Tooltip = 'Deletes the AntiJump LocalScript from your character model on spawn and respawn'
+        Tooltip = 'Deletes the AntiJump LocalScript from your character model and character on spawn/respawn'
     })
 end)
 
@@ -248,7 +260,7 @@ run(function()
 
         local model = workspace:FindFirstChild(tostring(lplr))
         if model and model:IsA('Model') then
-            if model:GetAttribute('tased') then
+            if model:GetAttribute('Tased') then
                 local root = char:FindFirstChild('HumanoidRootPart')
                 if root then
                     local pos = root.Position
