@@ -129,7 +129,7 @@ run(function()
     end
 
     DeleteAntiJump = vape.Categories.World:CreateModule({
-        Name = 'Anitjump disabler :3',
+        Name = 'Antijump disabler :3',
         Function = function(callback)
             if callback then
                 removeAntiJump()
