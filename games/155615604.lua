@@ -113,6 +113,11 @@ end)
 run(function()
     local PlaceTeleportation
     local TPLocation
+    local lastTP = 0
+
+    local function notif(...)
+        return vape:CreateNotification(...)
+    end
 
     local function CanTeleport()
         local char = playersService.LocalPlayer.Character
@@ -123,6 +128,12 @@ run(function()
         Name = 'Place Teleportation',
         Function = function(callback)
             if callback then
+                if tick() - lastTP < 1.6 then
+                    notif('Teleport', 'On cooldown! Wait ' .. string.format('%.1f', 1.6 - (tick() - lastTP)) .. 's', 2)
+                    PlaceTeleportation:Toggle()
+                    return
+                end
+
                 local location = TPLocation.Value
 
                 if location == 'Criminal Base' then
@@ -130,15 +141,18 @@ run(function()
                     if spawn and spawn:FindFirstChild('SpawnLocation') then
                         if CanTeleport() then
                             playersService.LocalPlayer.Character.HumanoidRootPart.CFrame = spawn.SpawnLocation.CFrame
+                            lastTP = tick()
                         end
                     end
                 elseif location == 'Prison' then
                     if CanTeleport() then
                         playersService.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(916, 100, 2369)
+                        lastTP = tick()
                     end
                 elseif location == 'Guard Room' then
                     if CanTeleport() then
                         playersService.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(828, 100, 2303)
+                        lastTP = tick()
                     end
                 end
 
