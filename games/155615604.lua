@@ -237,3 +237,51 @@ run(function()
         Tooltip = 'Grabs Remington 870 and MP5 then returns you back'
     })
 end)
+
+run(function()
+    local AntiTase
+    local taseConnection
+
+    local function checkTased()
+        local char = playersService.LocalPlayer.Character
+        if not char then return end
+
+        local model = workspace:FindFirstChild(tostring(lplr))
+        if model and model:IsA('Model') then
+            if model:GetAttribute('tased') then
+                local root = char:FindFirstChild('HumanoidRootPart')
+                if root then
+                    root.CFrame = root.CFrame - Vector3.new(0, 50, 0)
+                end
+            end
+        end
+    end
+
+    AntiTase = vape.Categories.Blatant:CreateModule({
+        Name = 'Anti Tase',
+        Function = function(callback)
+            if callback then
+                checkTased()
+
+                taseConnection = playersService.LocalPlayer.CharacterAdded:Connect(function()
+                    task.wait(0.01)
+                    checkTased()
+                end)
+
+
+                task.spawn(function()
+                    while AntiTase.Enabled do
+                        checkTased()
+                        task.wait(0.01)
+                    end
+                end)
+            else
+                if taseConnection then
+                    taseConnection:Disconnect()
+                    taseConnection = nil
+                end
+            end
+        end,
+        Tooltip = 'Teleports you down -50 studs when tased'
+    })
+end)
