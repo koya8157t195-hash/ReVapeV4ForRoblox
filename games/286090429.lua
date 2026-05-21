@@ -50,7 +50,6 @@ end
 
 run(function()
     local SilentAim
-    local Target
     local FOV
     local TeamCheck
     local VisibleCheck
@@ -60,6 +59,7 @@ run(function()
     local raycastParams = RaycastParams.new()
     raycastParams.RespectCanCollide = true
     local oldHooks = {}
+    local hookedFunctions = {}
 
     local function getClosestHitbox()
         local closestHitbox = nil
@@ -135,82 +135,69 @@ run(function()
         return closestHitbox
     end
 
-    local function hookAllRaycasts()
-        -- Hook workspace.Raycast
-        oldHooks.workspace = hookfunction(workspace.Raycast, function(self, origin, direction, params)
-            local closestHitbox = getClosestHitbox()
-            if closestHitbox then
-                direction = (closestHitbox.Position - origin).Unit * direction.Magnitude
-            end
-            return oldHooks.workspace(self, origin, direction, params)
-        end)
-
-        -- Hook any GC function named raycast
+    local function hookGC()
         for _, func in pairs(getgc()) do
-            if func and typeof(func) == 'function' and not oldHooks[func] then
+            if func and typeof(func) == 'function' and not hookedFunctions[func] then
                 local info = debug.getinfo(func)
+
                 if info and info.name and string.lower(info.name) == 'raycast' then
-                    oldHooks[func] = hookfunction(func, function(self, ...)
+                    hookedFunctions[func] = true
+                    local old = hookfunction(func, function(self, ...)
                         local args = {...}
                         local closestHitbox = getClosestHitbox()
                         if closestHitbox then
                             args[2] = (closestHitbox.Position - args[1]).Unit * 1000
                         end
-                        return oldHooks[func](self, table.unpack(args, 1, #args))
+                        return old(self, table.unpack(args, 1, #args))
                     end)
+                    oldHooks[func] = old
+                end
+
+                if info and info.name and string.lower(info.name) == 'createprojectile' then
+                    hookedFunctions[func] = true
+                    local old = hookfunction(func, function(...)
+                        local args = {...}
+                        local closestHitbox = getClosestHitbox()
+                        if closestHitbox and args[1] and args[1].Name == playersService.LocalPlayer.Name then
+                            local origin = args[4] or args[5]
+                            local directionArg = args[5] or args[6]
+                            local speedArg = args[6] or args[7]
+                            if origin and typeof(origin) == 'Vector3' then
+                                local newDirection = (closestHitbox.Position - origin).Unit
+                                if speedArg and type(speedArg) == 'number' then
+                                    args[directionArg == args[5] and 5 or 6] = newDirection
+                                elseif directionArg and typeof(directionArg) == 'Vector3' then
+                                    args[directionArg == args[5] and 5 or 6] = newDirection * speedArg
+                                end
+                            end
+                        end
+                        return old(table.unpack(args, 1, #args))
+                    end)
+                    oldHooks[func] = old
                 end
             end
         end
-
-        -- Hook __namecall for Raycast
-        oldHooks.namecall = hookmetamethod(game, '__namecall', function(...)
-            local method = getnamecallmethod()
-            if method == 'Raycast' then
-                local self, args = ..., {select(2, ...)}
-                local closestHitbox = getClosestHitbox()
-                if closestHitbox and args[1] then
-                    args[2] = (closestHitbox.Position - args[1]).Unit * args[2].Magnitude
-                end
-                return oldHooks.namecall(self, unpack(args))
-            end
-            return oldHooks.namecall(...)
-        end)
     end
 
-    local function unhookAll()
-        for key, old in pairs(oldHooks) do
-            if key == 'workspace' then
-                hookfunction(workspace.Raycast, old)
-            elseif key == 'namecall' then
-                hookmetamethod(game, '__namecall', old)
-            elseif typeof(key) == 'function' then
-                for _, func in pairs(getgc()) do
-                    if func and typeof(func) == 'function' then
-                        local info = debug.getinfo(func)
-                        if info and info.name and string.lower(info.name) == 'raycast' then
-                            hookfunction(func, old)
-                            break
-                        end
-                    end
-                end
-            end
+    local function unhookGC()
+        for func, old in pairs(oldHooks) do
+            hookfunction(func, old)
         end
         oldHooks = {}
+        hookedFunctions = {}
     end
 
     SilentAim = vape.Categories.Combat:CreateModule({
         Name = 'SilentAim',
         Function = function(callback)
             if callback then
-                hookAllRaycasts()
+                hookGC()
             else
-                unhookAll()
+                unhookGC()
             end
         end,
-        Tooltip = 'Silent aim that redirects bullets to the closest player hitbox'
+        Tooltip = 'Silent aim using GC hook method'
     })
-
-    Target = SilentAim:CreateTargets({Players = true})
 
     FOV = SilentAim:CreateSlider({
         Name = 'FOV',
