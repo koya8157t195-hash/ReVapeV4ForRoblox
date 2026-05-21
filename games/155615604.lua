@@ -559,6 +559,8 @@ run(function()
     local KillPlayer
     local TargetDropdown
     local RefreshBtn
+    local oldnamecall
+    local currentTarget
 
     local function getPlayers()
         local list = {}
@@ -583,16 +585,41 @@ run(function()
                 local targetName = TargetDropdown.Value
                 if targetName == 'No players' then return end
 
+                currentTarget = targetName
+
+                -- Hook Raycast __namecall for silent aim
+                oldnamecall = hookmetamethod(game, '__namecall', function(...)
+                    if getnamecallmethod() ~= 'Raycast' then
+                        return oldnamecall(...)
+                    end
+                    if checkcaller() then
+                        return oldnamecall(...)
+                    end
+
+                    local self, args = ..., {select(2, ...)}
+                    local origin = args[1]
+
+                    local target = playersService:FindFirstChild(currentTarget)
+                    if target and target.Character then
+                        local targetPart = target.Character:FindFirstChild('Head') or target.Character:FindFirstChild('HumanoidRootPart')
+                        if targetPart then
+                            args[2] = CFrame.lookAt(origin, targetPart.Position).LookVector * args[2].Magnitude
+                        end
+                    end
+
+                    return oldnamecall(self, unpack(args))
+                end)
+
                 task.spawn(function()
                     while KillPlayer.Enabled do
-                        local target = playersService:FindFirstChild(targetName)
+                        local target = playersService:FindFirstChild(currentTarget)
                         if not target then
                             task.wait(0.3)
                             continue
                         end
 
                         local targetChar = target.Character
-                        if not targetChar or not targetChar:FindFirstChild('HumanoidRootPart') or not targetChar:FindFirstChild('Head') then
+                        if not targetChar or not targetChar:FindFirstChild('HumanoidRootPart') then
                             task.wait(0.3)
                             continue
                         end
@@ -609,18 +636,22 @@ run(function()
                         char.HumanoidRootPart.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1)
 
                         -- Click to shoot
-                        task.spawn(function()
-                            mouse1press()
-                            task.wait(0.08)
-                            mouse1release()
-                        end)
+                        mouse1press()
+                        task.wait(0.08)
+                        mouse1release()
 
                         task.wait(0.3)
                     end
                 end)
+            else
+                if oldnamecall then
+                    hookmetamethod(game, '__namecall', oldnamecall)
+                    oldnamecall = nil
+                end
+                currentTarget = nil
             end
         end,
-        Tooltip = 'Teleports 1 stud behind the selected player and clicks to shoot'
+        Tooltip = 'Teleports 1 stud behind the selected player and shoots with silent aim'
     })
 
     TargetDropdown = KillPlayer:CreateDropdown({
