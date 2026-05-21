@@ -559,8 +559,6 @@ run(function()
     local KillPlayer
     local TargetDropdown
     local RefreshBtn
-    local oldnamecall
-    local currentTarget
 
     local function getPlayers()
         local list = {}
@@ -585,34 +583,9 @@ run(function()
                 local targetName = TargetDropdown.Value
                 if targetName == 'No players' then return end
 
-                currentTarget = targetName
-
-                -- Hook Raycast __namecall for silent aim
-                oldnamecall = hookmetamethod(game, '__namecall', function(...)
-                    if getnamecallmethod() ~= 'Raycast' then
-                        return oldnamecall(...)
-                    end
-                    if checkcaller() then
-                        return oldnamecall(...)
-                    end
-
-                    local self, args = ..., {select(2, ...)}
-                    local origin = args[1]
-
-                    local target = playersService:FindFirstChild(currentTarget)
-                    if target and target.Character then
-                        local targetPart = target.Character:FindFirstChild('Head') or target.Character:FindFirstChild('HumanoidRootPart')
-                        if targetPart then
-                            args[2] = CFrame.lookAt(origin, targetPart.Position).LookVector * args[2].Magnitude
-                        end
-                    end
-
-                    return oldnamecall(self, unpack(args))
-                end)
-
                 task.spawn(function()
                     while KillPlayer.Enabled do
-                        local target = playersService:FindFirstChild(currentTarget)
+                        local target = playersService:FindFirstChild(targetName)
                         if not target then
                             task.wait(0.3)
                             continue
@@ -635,7 +608,7 @@ run(function()
                         -- Teleport 1 stud behind them
                         char.HumanoidRootPart.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1)
 
-                        -- Click to shoot
+                        -- Click to shoot (Silent Aim handles the redirect)
                         mouse1press()
                         task.wait(0.08)
                         mouse1release()
@@ -643,15 +616,9 @@ run(function()
                         task.wait(0.3)
                     end
                 end)
-            else
-                if oldnamecall then
-                    hookmetamethod(game, '__namecall', oldnamecall)
-                    oldnamecall = nil
-                end
-                currentTarget = nil
             end
         end,
-        Tooltip = 'Teleports 1 stud behind the selected player and shoots with silent aim'
+        Tooltip = 'Teleports 1 stud behind the selected player and clicks to shoot. Use with SilentAim enabled.'
     })
 
     TargetDropdown = KillPlayer:CreateDropdown({
