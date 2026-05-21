@@ -135,20 +135,43 @@ run(function()
         return closestHitbox
     end
 
+    local function hookRaycastFunc()
+        for _, func in pairs(getgc()) do
+            if func and typeof(func) == 'function' then
+                local info = debug.getinfo(func)
+                if info and info.name and string.lower(info.name) == 'raycast' then
+                    oldRaycast = hookfunction(func, function(self, ...)
+                        local args = {...}
+                        local closestHitbox = getClosestHitbox()
+
+                        if closestHitbox then
+                            args[2] = (closestHitbox.Position - args[1]).Unit * 1000
+                        end
+
+                        return oldRaycast(self, table.unpack(args, 1, #args))
+                    end)
+                    break
+                end
+            end
+        end
+    end
+
     SilentAim = vape.Categories.Combat:CreateModule({
         Name = 'SilentAim',
         Function = function(callback)
             if callback then
-                oldRaycast = hookfunction(workspace.Raycast, function(self, origin, direction, params)
-                    local closestHitbox = getClosestHitbox()
-                    if closestHitbox then
-                        direction = (closestHitbox.Position - origin).Unit * direction.Magnitude
-                    end
-                    return oldRaycast(self, origin, direction, params)
-                end)
+                hookRaycastFunc()
             else
                 if oldRaycast then
-                    hookfunction(workspace.Raycast, oldRaycast)
+                    for _, func in pairs(getgc()) do
+                        if func and typeof(func) == 'function' then
+                            local info = debug.getinfo(func)
+                            if info and info.name and string.lower(info.name) == 'raycast' then
+                                hookfunction(func, oldRaycast)
+                                break
+                            end
+                        end
+                    end
                     oldRaycast = nil
                 end
             end
