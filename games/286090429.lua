@@ -179,15 +179,6 @@ run(function()
         Tooltip = 'Only targets players that are visible'
     })
 
-    UseClosestHitbox = SilentAim:CreateToggle({
-        Name = 'Closest Hitbox',
-        Default = true,
-        Function = function(callback)
-            BodyPart.Object.Visible = not callback
-        end,
-        Tooltip = 'Targets the closest body part instead of a specific one'
-    })
-
     BodyPart = SilentAim:CreateDropdown({
         Name = 'Body Part',
         List = cache.hitboxes,
@@ -195,5 +186,14 @@ run(function()
         Visible = false,
         Darker = true,
         Tooltip = 'Choose which body part to target'
+    })
+
+    UseClosestHitbox = SilentAim:CreateToggle({
+        Name = 'Closest Hitbox',
+        Default = true,
+        Function = function(callback)
+            BodyPart.Object.Visible = not callback
+        end,
+        Tooltip = 'Targets the closest body part instead of a specific one'
     })
 end)
