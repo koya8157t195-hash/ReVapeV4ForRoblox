@@ -192,7 +192,9 @@ run(function()
         Name = 'Closest Hitbox',
         Default = true,
         Function = function(callback)
-            BodyPart.Object.Visible = not callback
+            if BodyPart and BodyPart.Object then
+                BodyPart.Object.Visible = not callback
+            end
         end,
         Tooltip = 'Targets the closest body part instead of a specific one'
     })
