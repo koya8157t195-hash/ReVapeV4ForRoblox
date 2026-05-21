@@ -50,79 +50,65 @@ end
 
 run(function()
     local SilentAim
-    local FOV
-    local TeamCheck
-    local VisibleCheck
-    local UseClosestHitbox
-    local BodyPart
-    local cache = { hitboxes = {'Head', 'UpperTorso', 'LowerTorso', 'LeftUpperArm', 'RightUpperArm', 'LeftLowerArm', 'RightLowerArm', 'LeftHand', 'RightHand', 'LeftUpperLeg', 'RightUpperLeg', 'LeftLowerLeg', 'RightLowerLeg', 'LeftFoot', 'RightFoot'} }
+    local FOV, TeamCheck, VisibleCheck, ClosestHitbox
+
+    local hooked = false
+    local oldHooks = {}
+
+    local players = game:GetService("Players")
+    local lplr = players.LocalPlayer
+    local camera = workspace.CurrentCamera
+
+    local cache = {
+        hitboxes = {
+            "Head","UpperTorso","LowerTorso",
+            "LeftUpperArm","RightUpperArm",
+            "LeftLowerArm","RightLowerArm",
+            "LeftHand","RightHand",
+            "LeftUpperLeg","RightUpperLeg",
+            "LeftLowerLeg","RightLowerLeg",
+            "LeftFoot","RightFoot"
+        }
+    }
+
     local raycastParams = RaycastParams.new()
     raycastParams.RespectCanCollide = true
-    local oldHooks = {}
-    local hookedFunctions = {}
 
     local function getClosestHitbox()
-        local closestHitbox = nil
-        local shortestDistance = math.huge
-        local mouse = playersService.LocalPlayer:GetMouse()
+        local closest, dist = nil, math.huge
+        local mouse = lplr:GetMouse()
 
-        for _, player in pairs(playersService:GetPlayers()) do
-            local character = player.Character
-            if character and player ~= playersService.LocalPlayer then
-                if TeamCheck.Enabled and player.Team == playersService.LocalPlayer.Team then
-                    continue
-                end
+        for _, plr in pairs(players:GetPlayers()) do
+            if plr ~= lplr and plr.Character then
+                if TeamCheck.Enabled and plr.Team == lplr.Team then continue end
 
-                local humanoid = character:FindFirstChildOfClass('Humanoid')
-                if humanoid and humanoid.Health > 0 then
-                    local parts = UseClosestHitbox.Enabled and cache.hitboxes or {BodyPart.Value}
+                local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+                if hum and hum.Health > 0 then
+                    local parts = ClosestHitbox.Enabled and cache.hitboxes or {"Head"}
 
-                    for _, partName in pairs(parts) do
-                        local hitbox = character:FindFirstChild(partName)
-                        if hitbox then
-                            local screenPosition, onScreen = gameCamera:WorldToScreenPoint(hitbox.Position)
-                            if onScreen then
-                                local mousePos = Vector2.new(mouse.X, mouse.Y)
-                                local hitboxPos = Vector2.new(screenPosition.X, screenPosition.Y)
-                                local distance = (mousePos - hitboxPos).Magnitude
+                    for _, name in pairs(parts) do
+                        local part = plr.Character:FindFirstChild(name)
+                        if part then
+                            local screen, visible = camera:WorldToScreenPoint(part.Position)
+                            if visible then
+                                local mag = (Vector2.new(mouse.X, mouse.Y) - Vector2.new(screen.X, screen.Y)).Magnitude
 
-                                if distance <= FOV.Value and distance < shortestDistance then
+                                if mag < FOV.Value and mag < dist then
                                     if VisibleCheck.Enabled then
-                                        local rayOrigin = gameCamera.CFrame.Position
-                                        local rayDirection = (hitbox.Position - rayOrigin).Unit * 1000
+                                        local origin = camera.CFrame.Position
+                                        local dir = (part.Position - origin).Unit * 1000
 
-                                        raycastParams.FilterDescendantsInstances = {playersService.LocalPlayer.Character}
+                                        raycastParams.FilterDescendantsInstances = {lplr.Character}
                                         raycastParams.FilterType = Enum.RaycastFilterType.Exclude
 
-                                        local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-
-                                        while raycastResult and raycastResult.Instance do
-                                            local hitPart = raycastResult.Instance
-                                            local isCharacterPart = false
-
-                                            for _, p in pairs(playersService:GetPlayers()) do
-                                                if p.Character and hitPart:IsDescendantOf(p.Character) then
-                                                    isCharacterPart = true
-                                                    break
-                                                end
-                                            end
-
-                                            if not isCharacterPart and (hitPart.Transparency >= 0.5 or not hitPart.CanCollide) then
-                                                table.insert(raycastParams.FilterDescendantsInstances, hitPart)
-                                                rayOrigin = raycastResult.Position + rayDirection.Unit * 0.01
-                                                raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-                                            else
-                                                break
-                                            end
-                                        end
-
-                                        if raycastResult and raycastResult.Instance:IsDescendantOf(character) then
-                                            shortestDistance = distance
-                                            closestHitbox = hitbox
+                                        local result = workspace:Raycast(origin, dir, raycastParams)
+                                        if result and result.Instance:IsDescendantOf(plr.Character) then
+                                            dist = mag
+                                            closest = part
                                         end
                                     else
-                                        shortestDistance = distance
-                                        closestHitbox = hitbox
+                                        dist = mag
+                                        closest = part
                                     end
                                 end
                             end
@@ -132,111 +118,93 @@ run(function()
             end
         end
 
-        return closestHitbox
+        return closest
     end
 
-    local function hookGC()
+    local function hook()
+        if hooked then return end
+        hooked = true
+
         for _, func in pairs(getgc()) do
-            if func and typeof(func) == 'function' and not hookedFunctions[func] then
+            if typeof(func) == "function" then
                 local info = debug.getinfo(func)
 
-                if info and info.name and string.lower(info.name) == 'raycast' then
-                    hookedFunctions[func] = true
-                    local old = hookfunction(func, function(self, ...)
+                if info and info.name and string.find(string.lower(info.name), "raycast") then
+                    local old
+                    old = hookfunction(func, function(self, ...)
                         local args = {...}
-                        local closestHitbox = getClosestHitbox()
-                        if closestHitbox then
-                            args[2] = (closestHitbox.Position - args[1]).Unit * 1000
+                        local target = getClosestHitbox()
+
+                        if target then
+                            args[2] = (target.Position - args[1]).Unit * 1000
                         end
-                        return old(self, table.unpack(args, 1, #args))
+
+                        return old(self, unpack(args))
                     end)
-                    oldHooks[func] = old
+
+                    table.insert(oldHooks, {func, old})
                 end
 
-                if info and info.name and string.lower(info.name) == 'createprojectile' then
-                    hookedFunctions[func] = true
-                    local old = hookfunction(func, function(...)
+                if info and info.name and string.find(string.lower(info.name), "projectile") then
+                    local old
+                    old = hookfunction(func, function(...)
                         local args = {...}
-                        local closestHitbox = getClosestHitbox()
-                        if closestHitbox and args[1] and args[1].Name == playersService.LocalPlayer.Name then
-                            local origin = args[4] or args[5]
-                            local directionArg = args[5] or args[6]
-                            local speedArg = args[6] or args[7]
-                            if origin and typeof(origin) == 'Vector3' then
-                                local newDirection = (closestHitbox.Position - origin).Unit
-                                if speedArg and type(speedArg) == 'number' then
-                                    args[directionArg == args[5] and 5 or 6] = newDirection
-                                elseif directionArg and typeof(directionArg) == 'Vector3' then
-                                    args[directionArg == args[5] and 5 or 6] = newDirection * speedArg
-                                end
+                        local target = getClosestHitbox()
+
+                        if target and args[4] then
+                            local origin = args[4]
+                            if typeof(origin) == "Vector3" then
+                                args[5] = (target.Position - origin).Unit * 1000
                             end
                         end
-                        return old(table.unpack(args, 1, #args))
+
+                        return old(unpack(args))
                     end)
-                    oldHooks[func] = old
+
+                    table.insert(oldHooks, {func, old})
                 end
             end
         end
     end
 
-    local function unhookGC()
-        for func, old in pairs(oldHooks) do
-            hookfunction(func, old)
+    local function unhook()
+        for _, v in pairs(oldHooks) do
+            hookfunction(v[1], v[2])
         end
         oldHooks = {}
-        hookedFunctions = {}
+        hooked = false
     end
 
     SilentAim = vape.Categories.Combat:CreateModule({
-        Name = 'SilentAim',
-        Function = function(callback)
-            if callback then
-                hookGC()
+        Name = "SilentAim",
+        Function = function(enabled)
+            if enabled then
+                hook()
             else
-                unhookGC()
+                unhook()
             end
-        end,
-        Tooltip = 'Silent aim using GC hook method'
+        end
     })
 
     FOV = SilentAim:CreateSlider({
-        Name = 'FOV',
+        Name = "FOV",
         Min = 10,
         Max = 500,
-        Default = 90,
-        Suffix = 'px',
-        Tooltip = 'Field of view radius in pixels'
+        Default = 120
     })
 
     TeamCheck = SilentAim:CreateToggle({
-        Name = 'Team Check',
-        Default = true,
-        Tooltip = 'Ignores players on your team'
+        Name = "Team Check",
+        Default = true
     })
 
     VisibleCheck = SilentAim:CreateToggle({
-        Name = 'Visible Check',
-        Default = true,
-        Tooltip = 'Only targets players that are visible'
+        Name = "Visible Check",
+        Default = true
     })
 
-    BodyPart = SilentAim:CreateDropdown({
-        Name = 'Body Part',
-        List = cache.hitboxes,
-        Default = 'Head',
-        Visible = false,
-        Darker = true,
-        Tooltip = 'Choose which body part to target'
-    })
-
-    UseClosestHitbox = SilentAim:CreateToggle({
-        Name = 'Closest Hitbox',
-        Default = true,
-        Function = function(callback)
-            if BodyPart and BodyPart.Object then
-                BodyPart.Object.Visible = not callback
-            end
-        end,
-        Tooltip = 'Targets the closest body part instead of a specific one'
+    ClosestHitbox = SilentAim:CreateToggle({
+        Name = "Closest Hitbox",
+        Default = true
     })
 end)
