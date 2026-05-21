@@ -48,6 +48,19 @@ for _, v in {'AutoClicker', 'Reach', 'MurderMystery', 'AutoRejoin', 'Killaura', 
 	vape:Remove(v)
 end
 
+task.spawn(function()
+    while task.wait() do
+        if game.Players.LocalPlayer and game.Players.LocalPlayer.Character then
+            local hum = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum.WalkSpeed = 25
+                game.Players.LocalPlayer:SetAttribute("BackpackEnabled", true)
+                hum.JumpHeight = 5.5
+            end
+        end
+    end
+end)
+
 run(function()
     local SilentAim
     local Target
