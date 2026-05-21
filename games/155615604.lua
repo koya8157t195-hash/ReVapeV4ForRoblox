@@ -583,6 +583,9 @@ run(function()
                 local targetName = TargetDropdown.Value
                 if targetName == 'No players' then return end
 
+                -- Start holding shoot
+                mouse1press()
+
                 task.spawn(function()
                     while KillPlayer.Enabled do
                         local target = playersService:FindFirstChild(targetName)
@@ -608,17 +611,15 @@ run(function()
                         -- Teleport 1 stud behind them
                         char.HumanoidRootPart.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1)
 
-                        -- Click to shoot (Silent Aim handles the redirect)
-                        mouse1press()
-                        task.wait(0.08)
-                        mouse1release()
-
-                        task.wait(0.3)
+                        task.wait()
                     end
                 end)
+            else
+                -- Release shoot when disabled
+                mouse1release()
             end
         end,
-        Tooltip = 'Teleports 1 stud behind the selected player and clicks to shoot. Use with SilentAim enabled.'
+        Tooltip = 'Teleports behind the selected player and holds shoot constantly'
     })
 
     TargetDropdown = KillPlayer:CreateDropdown({
