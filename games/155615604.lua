@@ -637,6 +637,7 @@ end)
 run(function()
     local KillPlayer
     local TargetDropdown
+    local TPMethod
     local RefreshBtn
 
     local function getPlayers()
@@ -655,6 +656,56 @@ run(function()
         TargetDropdown:SetValue(list[1])
     end
 
+    local function DoTP(targetCFrame)
+        local root = playersService.LocalPlayer.Character.HumanoidRootPart
+        
+        if TPMethod.Value == 'Instant' then
+            root.CFrame = targetCFrame
+        elseif TPMethod.Value == 'Tween' then
+            local speed = 2.5
+            local totalDistance = (targetCFrame.Position - root.Position).Magnitude
+            local baseDuration = totalDistance / (speed * 50)
+            
+            local tween = tweenService:Create(root, TweenInfo.new(baseDuration, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
+            tween:Play()
+            
+            local boostThread = task.spawn(function()
+                while tween.PlaybackState == Enum.PlaybackState.Playing do
+                    task.wait(math.random(120, 160) / 100)
+                    if tween.PlaybackState ~= Enum.PlaybackState.Playing then break end
+                    
+                    local totalTime = baseDuration
+                    
+                    local currentPos = root.Position
+                    local dir = (targetCFrame.Position - currentPos).Unit
+                    local remainingDist = (targetCFrame.Position - currentPos).Magnitude
+                    local leapDistance = remainingDist * 0.3
+                    root.CFrame = CFrame.new(currentPos + (dir * leapDistance))
+                    
+                    local newRemaining = (targetCFrame.Position - root.Position).Magnitude
+                    local newProgress = 1 - (newRemaining / totalDistance)
+                    local newTimePos = math.min(newProgress * totalTime, totalTime - 0.1)
+                    
+                    tween:Pause()
+                    tween.TimePosition = newTimePos
+                    tween:Play()
+                    
+                    local boostEnd = tick() + math.random(20, 50) / 100
+                    while tick() < boostEnd and tween.PlaybackState == Enum.PlaybackState.Playing do
+                        local currentTime = tween.TimePosition
+                        local timeJump = task.wait()
+                        tween:Pause()
+                        tween.TimePosition = math.min(currentTime + (timeJump * 3), totalTime)
+                        tween:Play()
+                    end
+                end
+            end)
+            
+            tween.Completed:Wait()
+            task.cancel(boostThread)
+        end
+    end
+
     KillPlayer = vape.Categories.Combat:CreateModule({
         Name = 'Kill Player',
         Function = function(callback)
@@ -662,7 +713,6 @@ run(function()
                 local targetName = TargetDropdown.Value
                 if targetName == 'No players' then return end
 
-                -- Start holding shoot
                 mouse1press()
 
                 task.spawn(function()
@@ -686,15 +736,14 @@ run(function()
                         end
 
                         local targetRoot = targetChar.HumanoidRootPart
+                        local targetCFrame = targetRoot.CFrame * CFrame.new(0, 0, 1)
 
-                        -- Teleport 1 stud behind them
-                        char.HumanoidRootPart.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1)
+                        DoTP(targetCFrame)
 
                         task.wait()
                     end
                 end)
             else
-                -- Release shoot when disabled
                 mouse1release()
             end
         end,
@@ -706,6 +755,13 @@ run(function()
         List = getPlayers(),
         Default = getPlayers()[1],
         Tooltip = 'Select the player to kill'
+    })
+
+    TPMethod = KillPlayer:CreateDropdown({
+        Name = 'TP Method',
+        List = {'Instant', 'Tween'},
+        Default = 'Instant',
+        Tooltip = 'Instant snap or tween with speed bursts'
     })
 
     RefreshBtn = KillPlayer:CreateButton({
