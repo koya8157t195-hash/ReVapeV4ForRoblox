@@ -61,6 +61,19 @@ task.spawn(function()
     end
 end)
 
+For _, v in pairs(workspace.Prison_Fences:GetChildren()) do
+    if v.Name == "fence" then
+        recursiveProcess(v)
+        local dmg = v:FindFirstChild("damagePart")
+        if dmg then
+            local ti = dmg:FindFirstChild("TouchInterest")
+            if ti then
+                ti:Destroy()
+            end
+        end
+    end
+end
+
 run(function()
     local SilentAim
     local Target
