@@ -713,8 +713,6 @@ run(function()
                 local targetName = TargetDropdown.Value
                 if targetName == 'No players' then return end
 
-                mouse1press()
-
                 task.spawn(function()
                     while KillPlayer.Enabled do
                         local target = playersService:FindFirstChild(targetName)
@@ -740,6 +738,14 @@ run(function()
 
                         DoTP(targetCFrame)
 
+                        -- Only shoot if within 5 studs
+                        local dist = (char.HumanoidRootPart.Position - targetRoot.Position).Magnitude
+                        if dist <= 5 then
+                            mouse1press()
+                        else
+                            mouse1release()
+                        end
+
                         task.wait()
                     end
                 end)
@@ -747,7 +753,7 @@ run(function()
                 mouse1release()
             end
         end,
-        Tooltip = 'Teleports behind the selected player and holds shoot constantly'
+        Tooltip = 'Teleports behind the selected player and shoots when within 5 studs'
     })
 
     TargetDropdown = KillPlayer:CreateDropdown({
