@@ -428,9 +428,7 @@ run(function()
     local PlaceTeleportation
     local TPLocation
     local TPMethod
-    local TweenMode
     local TweenSpeed
-    local TweenStyle
     local lastTP = 0
 
     local function notif(...)
@@ -442,42 +440,26 @@ run(function()
         return char and char:FindFirstChild('HumanoidRootPart')
     end
 
-    local function InstantTP(targetCFrame)
+    local function DoTP(targetCFrame)
         local root = playersService.LocalPlayer.Character.HumanoidRootPart
-        root.CFrame = targetCFrame
-    end
-
-    local function TweenTP(targetCFrame)
-        local root = playersService.LocalPlayer.Character.HumanoidRootPart
-        local speed = tonumber(TweenSpeed.Value) or 1
-        local styleMap = {
-            Linear = Enum.EasingStyle.Linear,
-            Sine = Enum.EasingStyle.Sine,
-            Quad = Enum.EasingStyle.Quad,
-            Cubic = Enum.EasingStyle.Cubic,
-            Quart = Enum.EasingStyle.Quart,
-            Quint = Enum.EasingStyle.Quint,
-            Back = Enum.EasingStyle.Back,
-            Elastic = Enum.EasingStyle.Elastic,
-            Bounce = Enum.EasingStyle.Bounce
-        }
-        local style = styleMap[TweenStyle.Value] or Enum.EasingStyle.Quad
-        local directionMap = {
-            In = Enum.EasingDirection.In,
-            Out = Enum.EasingDirection.Out,
-            InOut = Enum.EasingDirection.InOut
-        }
-        local direction = directionMap[TweenMode.Value] or Enum.EasingDirection.Out
         
-        local tweenInfo = TweenInfo.new(
-            (targetCFrame.Position - root.Position).Magnitude / (speed * 100),
-            style,
-            direction
-        )
+        -- Snap underground first
+        local underground = targetCFrame * CFrame.new(0, -10, 0)
+        root.CFrame = underground
         
-        local tween = tweenService:Create(root, tweenInfo, {CFrame = targetCFrame})
-        tween:Play()
-        tween.Completed:Wait()
+        if TPMethod.Value == 'Instant' then
+            task.wait(0.05)
+            root.CFrame = targetCFrame
+        elseif TPMethod.Value == 'Tween' then
+            local speed = tonumber(TweenSpeed.Value) or 1
+            local distance = (targetCFrame.Position - underground.Position).Magnitude
+            local duration = distance / (speed * 100)
+            
+            task.wait(0.05)
+            local tween = tweenService:Create(root, TweenInfo.new(duration, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
+            tween:Play()
+            tween.Completed:Wait()
+        end
     end
 
     PlaceTeleportation = vape.Categories.World:CreateModule({
@@ -511,13 +493,7 @@ run(function()
                 end
 
                 if targetCFrame then
-                    if TPMethod.Value == 'Instant' then
-                        InstantTP(targetCFrame)
-                    elseif TPMethod.Value == 'Tween' then
-                        TweenTP(targetCFrame)
-                    elseif TPMethod.Value == 'Tween (No Wait)' then
-                        coroutine.wrap(TweenTP)(targetCFrame)
-                    end
+                    DoTP(targetCFrame)
                     lastTP = tick()
                 else
                     notif('Teleport', 'Location not found', 2, 'alert')
@@ -538,16 +514,9 @@ run(function()
 
     TPMethod = PlaceTeleportation:CreateDropdown({
         Name = 'TP Method',
-        List = {'Instant', 'Tween', 'Tween (No Wait)'},
+        List = {'Instant', 'Tween'},
         Default = 'Instant',
-        Tooltip = 'How to teleport - instant or smooth tween'
-    })
-
-    TweenMode = PlaceTeleportation:CreateDropdown({
-        Name = 'Tween Mode',
-        List = {'In', 'Out', 'InOut'},
-        Default = 'Out',
-        Tooltip = 'Easing direction for tweens'
+        Tooltip = 'Instant snap or smooth tween up from underground'
     })
 
     TweenSpeed = PlaceTeleportation:CreateSlider({
@@ -555,16 +524,9 @@ run(function()
         Min = 0.1,
         Max = 10,
         Default = 1,
-        Decimals = 1,
+        Decimals = 0.2,
         Suffix = 'x',
-        Tooltip = 'How fast the tween moves (higher = faster)'
-    })
-
-    TweenStyle = PlaceTeleportation:CreateDropdown({
-        Name = 'Tween Style',
-        List = {'Linear', 'Sine', 'Quad', 'Cubic', 'Quart', 'Quint', 'Back', 'Elastic', 'Bounce'},
-        Default = 'Quad',
-        Tooltip = 'Easing style for the movement curve'
+        Tooltip = 'How fast the tween rises (higher = faster)'
     })
 end)
 
