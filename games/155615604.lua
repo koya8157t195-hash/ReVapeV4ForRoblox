@@ -428,7 +428,6 @@ run(function()
     local PlaceTeleportation
     local TPLocation
     local TPMethod
-    local TweenSpeed
     local lastTP = 0
 
     local function notif(...)
@@ -446,7 +445,7 @@ run(function()
         if TPMethod.Value == 'Instant' then
             root.CFrame = targetCFrame
         elseif TPMethod.Value == 'Tween' then
-            local speed = tonumber(TweenSpeed.Value) or 0.5
+            local speed = 1.5
             local startPos = root.Position
             local targetPos = targetCFrame.Position
             local totalDistance = (targetPos - startPos).Magnitude
@@ -460,32 +459,24 @@ run(function()
                     task.wait(math.random(120, 160) / 100)
                     if tween.PlaybackState ~= Enum.PlaybackState.Playing then break end
                     
-                    -- Save how far along we are
                     local elapsed = tween.TimePosition
                     local totalTime = baseDuration
                     
-                    -- Snap forward 30% of remaining distance
                     local currentPos = root.Position
                     local dir = (targetPos - currentPos).Unit
                     local remainingDist = (targetPos - currentPos).Magnitude
                     local leapDistance = remainingDist * 0.3
                     root.CFrame = CFrame.new(currentPos + (dir * leapDistance))
                     
-                    -- Figure out new remaining distance and set tween time forward
                     local newRemaining = (targetPos - root.Position).Magnitude
                     local newProgress = 1 - (newRemaining / totalDistance)
                     local newTimePos = math.min(newProgress * totalTime, totalTime - 0.1)
                     
-                    -- Temporarily speed up by adjusting time position
                     tween:Pause()
                     tween.TimePosition = newTimePos
                     tween:Play()
                     
-                    -- Speed burst: crank the tween playback speed way up for 0.2-0.5s
-                    local boostStart = tick()
-                    local boostEnd = boostStart + math.random(20, 50) / 100
-                    local originalPlaybackState = true
-                    
+                    local boostEnd = tick() + math.random(20, 50) / 100
                     while tick() < boostEnd and tween.PlaybackState == Enum.PlaybackState.Playing do
                         local currentTime = tween.TimePosition
                         local timeJump = task.wait()
@@ -556,16 +547,6 @@ run(function()
         List = {'Instant', 'Tween'},
         Default = 'Instant',
         Tooltip = 'Instant snap or slow tween with speed bursts'
-    })
-
-    TweenSpeed = PlaceTeleportation:CreateSlider({
-        Name = 'Tween Speed',
-        Min = 0.1,
-        Max = 5,
-        Default = 0.5,
-        Decimals = 1,
-        Suffix = 'x',
-        Tooltip = 'Base tween speed (slower = more bursts)'
     })
 end)
 
