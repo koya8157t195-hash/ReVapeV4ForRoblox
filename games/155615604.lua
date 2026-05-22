@@ -651,8 +651,18 @@ run(function()
 end)
 
 run(function()
+    local remotes = replicatedStorage:WaitForChild("Remotes") -- adjust if path differs
+    local workspaceService = workspace
     local RequestTeamChange = remotes:WaitForChild("RequestTeamChange")
     local Shippingcontainers = workspaceService:WaitForChild("Shippingcontainers")
+    
+    local teamService = {
+        Neutral = teamsService:WaitForChild("Neutral"),
+        Guards = teamsService:WaitForChild("Guards"),
+        Inmates = teamsService:WaitForChild("Inmates"),
+        Criminals = teamsService:WaitForChild("Criminals")
+    }
+    
     local TeamSwitcher
     local Team
 
@@ -660,33 +670,37 @@ run(function()
         Name = "TeamSwitcher",
         Function = function(callback)
             if callback == true then
-                notif('Vape', 'Please expand this module to use it', 3, 'alert')
+                vape:CreateNotification('Vape', 'Please expand this module to use it', 3, 'alert')
                 TeamSwitcher:Toggle()
             end
         end
     })
+    
     Team = TeamSwitcher:CreateDropdown({
         Name = "Select Team",
         List = {"Criminals", "Inmates", "Guards", "Neutral"},
         Tooltip = "Select a team to switch to"
     })
+    
     TeamSwitcher:CreateButton({
         Name = "Switch",
         Function = function()
             if Team.Value == "Neutral" then
                 RequestTeamChange:InvokeServer(teamService.Neutral, 1)
+                
             elseif Team.Value == "Guards" then
                 RequestTeamChange:InvokeServer(teamService.Neutral, 1)
                 task.wait(1.5)
                 RequestTeamChange:InvokeServer(teamService.Guards, 1)
                 task.delay(1, function()
                     if lplr.Team ~= teamService.Guards then
-                        notif('Vape',
-                              'Failed to switch to guards team, please try again later',3, 'alert')
+                        vape:CreateNotification('Vape', 'Failed to switch to guards team, please try again later', 3, 'alert')
                     end
                 end)
+                
             elseif Team.Value == "Criminals" then
                 if lplr.Team == teamService.Inmates then
+                    local t = entitylib.character
                     repeat
                         t.d.s = Shippingcontainers.WorldPivot
                         task.wait(0.05)
@@ -694,17 +708,16 @@ run(function()
                     t.d.s = CFrame.new()
                     -- entitylib.character.Humanoid.Health = 0
                 else
-                    notif('Vape'Please switch to the inmates team and try againalert')
+                    vape:CreateNotification('Vape', 'Please switch to the inmates team and try again', 3, 'alert')
                 end
+                
             elseif Team.Value == "Inmates" then
-                RequestTeamChange:InvokeServer(game:GetService("Teams").Neutral,
-                                               1)
+                RequestTeamChange:InvokeServer(teamService.Neutral, 1)
                 task.wait(1.5)
-                RequestTeamChange:InvokeServer(game:GetService("Teams").Inmates,
-                                               1)
+                RequestTeamChange:InvokeServer(teamService.Inmates, 1)
                 task.delay(1, function()
                     if lplr.Team ~= teamService.Inmates then
-                        notif('Vape','Failed to switch to inmates team, please try again later',3, 'alert')
+                        vape:CreateNotification('Vape', 'Failed to switch to inmates team, please try again later', 3, 'alert')
                     end
                 end)
             end
