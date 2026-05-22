@@ -50,20 +50,19 @@ end
 
 task.spawn(function()
     while task.wait() do
-        if game.Players.LocalPlayer and game.Players.LocalPlayer.Character then
-            local hum = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if playersService.LocalPlayer and playersService.LocalPlayer.Character then
+            local hum = playersService.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
             if hum then
                 hum.WalkSpeed = 25
-                game.Players.LocalPlayer:SetAttribute("BackpackEnabled", true)
+                playersService.LocalPlayer:SetAttribute("BackpackEnabled", true)
                 hum.JumpHeight = 5.5
             end
         end
     end
 end)
 
-For _, v in pairs(workspace.Prison_Fences:GetChildren()) do
+for _, v in pairs(workspace.Prison_Fences:GetChildren()) do
     if v.Name == "fence" then
-        recursiveProcess(v)
         local dmg = v:FindFirstChild("damagePart")
         if dmg then
             local ti = dmg:FindFirstChild("TouchInterest")
