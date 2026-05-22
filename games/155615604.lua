@@ -652,8 +652,7 @@ end)
 
 run(function()
     local RequestTeamChange = remotes:WaitForChild("RequestTeamChange")
-    local Shippingcontainers = workspaceService:WaitForChild(
-                                   "Shippingcontainers")
+    local Shippingcontainers = workspaceService:WaitForChild("Shippingcontainers")
     local TeamSwitcher
     local Team
 
@@ -683,8 +682,7 @@ run(function()
                 task.delay(1, function()
                     if lplr.Team ~= teamService.Guards then
                         notif('Vape',
-                              'Failed to switch to guards team, please try again later',
-                              3, 'alert')
+                              'Failed to switch to guards team, please try again later',3, 'alert')
                     end
                 end)
             elseif Team.Value == "Criminals" then
@@ -696,9 +694,7 @@ run(function()
                     t.d.s = CFrame.new()
                     -- entitylib.character.Humanoid.Health = 0
                 else
-                    notif('Vape',
-                          'Please switch to the inmates team and try again', 3,
-                          'alert')
+                    notif('Vape'Please switch to the inmates team and try againalert')
                 end
             elseif Team.Value == "Inmates" then
                 RequestTeamChange:InvokeServer(game:GetService("Teams").Neutral,
@@ -708,9 +704,7 @@ run(function()
                                                1)
                 task.delay(1, function()
                     if lplr.Team ~= teamService.Inmates then
-                        notif('Vape',
-                              'Failed to switch to inmates team, please try again later',
-                              3, 'alert')
+                        notif('Vape','Failed to switch to inmates team, please try again later',3, 'alert')
                     end
                 end)
             end
