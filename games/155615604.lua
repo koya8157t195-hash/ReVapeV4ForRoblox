@@ -427,6 +427,10 @@ end)
 run(function()
     local PlaceTeleportation
     local TPLocation
+    local TPMethod
+    local TweenMode
+    local TweenSpeed
+    local TweenStyle
     local lastTP = 0
 
     local function notif(...)
@@ -436,6 +440,44 @@ run(function()
     local function CanTeleport()
         local char = playersService.LocalPlayer.Character
         return char and char:FindFirstChild('HumanoidRootPart')
+    end
+
+    local function InstantTP(targetCFrame)
+        local root = playersService.LocalPlayer.Character.HumanoidRootPart
+        root.CFrame = targetCFrame
+    end
+
+    local function TweenTP(targetCFrame)
+        local root = playersService.LocalPlayer.Character.HumanoidRootPart
+        local speed = tonumber(TweenSpeed.Value) or 1
+        local styleMap = {
+            Linear = Enum.EasingStyle.Linear,
+            Sine = Enum.EasingStyle.Sine,
+            Quad = Enum.EasingStyle.Quad,
+            Cubic = Enum.EasingStyle.Cubic,
+            Quart = Enum.EasingStyle.Quart,
+            Quint = Enum.EasingStyle.Quint,
+            Back = Enum.EasingStyle.Back,
+            Elastic = Enum.EasingStyle.Elastic,
+            Bounce = Enum.EasingStyle.Bounce
+        }
+        local style = styleMap[TweenStyle.Value] or Enum.EasingStyle.Quad
+        local directionMap = {
+            In = Enum.EasingDirection.In,
+            Out = Enum.EasingDirection.Out,
+            InOut = Enum.EasingDirection.InOut
+        }
+        local direction = directionMap[TweenMode.Value] or Enum.EasingDirection.Out
+        
+        local tweenInfo = TweenInfo.new(
+            (targetCFrame.Position - root.Position).Magnitude / (speed * 100),
+            style,
+            direction
+        )
+        
+        local tween = tweenService:Create(root, tweenInfo, {CFrame = targetCFrame})
+        tween:Play()
+        tween.Completed:Wait()
     end
 
     PlaceTeleportation = vape.Categories.World:CreateModule({
@@ -448,26 +490,37 @@ run(function()
                     return
                 end
 
+                if not CanTeleport() then
+                    notif('Teleport', 'No character found', 2, 'alert')
+                    PlaceTeleportation:Toggle()
+                    return
+                end
+
                 local location = TPLocation.Value
+                local targetCFrame
 
                 if location == 'Criminal Base' then
                     local spawn = workspace:FindFirstChild('Criminals Spawn')
                     if spawn and spawn:FindFirstChild('SpawnLocation') then
-                        if CanTeleport() then
-                            playersService.LocalPlayer.Character.HumanoidRootPart.CFrame = spawn.SpawnLocation.CFrame
-                            lastTP = tick()
-                        end
+                        targetCFrame = spawn.SpawnLocation.CFrame
                     end
                 elseif location == 'Prison' then
-                    if CanTeleport() then
-                        playersService.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(916, 100, 2369)
-                        lastTP = tick()
-                    end
+                    targetCFrame = CFrame.new(916, 100, 2369)
                 elseif location == 'Guard Room' then
-                    if CanTeleport() then
-                        playersService.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(828, 100, 2303)
-                        lastTP = tick()
+                    targetCFrame = CFrame.new(828, 100, 2303)
+                end
+
+                if targetCFrame then
+                    if TPMethod.Value == 'Instant' then
+                        InstantTP(targetCFrame)
+                    elseif TPMethod.Value == 'Tween' then
+                        TweenTP(targetCFrame)
+                    elseif TPMethod.Value == 'Tween (No Wait)' then
+                        coroutine.wrap(TweenTP)(targetCFrame)
                     end
+                    lastTP = tick()
+                else
+                    notif('Teleport', 'Location not found', 2, 'alert')
                 end
 
                 PlaceTeleportation:Toggle()
@@ -481,6 +534,37 @@ run(function()
         List = {'Criminal Base', 'Prison', 'Guard Room'},
         Default = 'Criminal Base',
         Tooltip = 'Choose where to teleport'
+    })
+
+    TPMethod = PlaceTeleportation:CreateDropdown({
+        Name = 'TP Method',
+        List = {'Instant', 'Tween', 'Tween (No Wait)'},
+        Default = 'Instant',
+        Tooltip = 'How to teleport - instant or smooth tween'
+    })
+
+    TweenMode = PlaceTeleportation:CreateDropdown({
+        Name = 'Tween Mode',
+        List = {'In', 'Out', 'InOut'},
+        Default = 'Out',
+        Tooltip = 'Easing direction for tweens'
+    })
+
+    TweenSpeed = PlaceTeleportation:CreateSlider({
+        Name = 'Tween Speed',
+        Min = 0.1,
+        Max = 10,
+        Default = 1,
+        Decimals = 1,
+        Suffix = 'x',
+        Tooltip = 'How fast the tween moves (higher = faster)'
+    })
+
+    TweenStyle = PlaceTeleportation:CreateDropdown({
+        Name = 'Tween Style',
+        List = {'Linear', 'Sine', 'Quad', 'Cubic', 'Quart', 'Quint', 'Back', 'Elastic', 'Bounce'},
+        Default = 'Quad',
+        Tooltip = 'Easing style for the movement curve'
     })
 end)
 
