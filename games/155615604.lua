@@ -447,25 +447,33 @@ run(function()
             root.CFrame = targetCFrame
         elseif TPMethod.Value == 'Tween' then
             local speed = tonumber(TweenSpeed.Value) or 0.5
-            local startPos = root.Position
             local targetPos = targetCFrame.Position
-            local totalDistance = (targetPos - startPos).Magnitude
+            local totalDistance = (targetPos - root.Position).Magnitude
             local baseDuration = totalDistance / (speed * 50)
             
             local tween = tweenService:Create(root, TweenInfo.new(baseDuration, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
             tween:Play()
             
-            -- Random speed boosts during tween
             local boostThread = task.spawn(function()
                 while tween.PlaybackState == Enum.PlaybackState.Playing do
-                    task.wait(math.random(120, 160) / 100) -- 1.2 to 1.6 seconds
+                    task.wait(math.random(120, 160) / 100)
                     if tween.PlaybackState ~= Enum.PlaybackState.Playing then break end
                     
-                    -- Burst the character forward toward the target
+                    tween:Pause()
+                    
                     local currentPos = root.Position
                     local dir = (targetPos - currentPos).Unit
-                    local burstDistance = 150 * 0.1
-                    root.CFrame = root.CFrame + (dir * burstDistance)
+                    local remainingDist = (targetPos - currentPos).Magnitude
+                    
+                    local leapDistance = remainingDist * 0.3
+                    root.CFrame = CFrame.new(currentPos + (dir * leapDistance))
+                    
+                    local newRemaining = (targetPos - root.Position).Magnitude
+                    local burstSpeed = speed * 8
+                    local newDuration = newRemaining / (burstSpeed * 50)
+                    
+                    tween = tweenService:Create(root, TweenInfo.new(newDuration, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
+                    tween:Play()
                 end
             end)
             
