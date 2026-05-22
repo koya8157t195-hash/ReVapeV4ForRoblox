@@ -443,22 +443,34 @@ run(function()
     local function DoTP(targetCFrame)
         local root = playersService.LocalPlayer.Character.HumanoidRootPart
         
-        -- Snap underground first
-        local underground = targetCFrame * CFrame.new(0, -10, 0)
-        root.CFrame = underground
-        
         if TPMethod.Value == 'Instant' then
-            task.wait(0.05)
             root.CFrame = targetCFrame
         elseif TPMethod.Value == 'Tween' then
-            local speed = tonumber(TweenSpeed.Value) or 1
-            local distance = (targetCFrame.Position - underground.Position).Magnitude
-            local duration = distance / (speed * 100)
+            local speed = tonumber(TweenSpeed.Value) or 0.5
+            local startPos = root.Position
+            local targetPos = targetCFrame.Position
+            local totalDistance = (targetPos - startPos).Magnitude
+            local baseDuration = totalDistance / (speed * 50)
             
-            task.wait(0.05)
-            local tween = tweenService:Create(root, TweenInfo.new(duration, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
+            local tween = tweenService:Create(root, TweenInfo.new(baseDuration, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
             tween:Play()
+            
+            -- Random speed boosts during tween
+            local boostThread = task.spawn(function()
+                while tween.PlaybackState == Enum.PlaybackState.Playing do
+                    task.wait(math.random(120, 160) / 100) -- 1.2 to 1.6 seconds
+                    if tween.PlaybackState ~= Enum.PlaybackState.Playing then break end
+                    
+                    -- Burst the character forward toward the target
+                    local currentPos = root.Position
+                    local dir = (targetPos - currentPos).Unit
+                    local burstDistance = 150 * 0.1
+                    root.CFrame = root.CFrame + (dir * burstDistance)
+                end
+            end)
+            
             tween.Completed:Wait()
+            task.cancel(boostThread)
         end
     end
 
@@ -516,17 +528,17 @@ run(function()
         Name = 'TP Method',
         List = {'Instant', 'Tween'},
         Default = 'Instant',
-        Tooltip = 'Instant snap or smooth tween up from underground'
+        Tooltip = 'Instant snap or slow tween with speed bursts'
     })
 
     TweenSpeed = PlaceTeleportation:CreateSlider({
         Name = 'Tween Speed',
         Min = 0.1,
-        Max = 10,
-        Default = 1,
-        Decimals = 0.2,
+        Max = 5,
+        Default = 0.5,
+        Decimals = 1,
         Suffix = 'x',
-        Tooltip = 'How fast the tween rises (higher = faster)'
+        Tooltip = 'Base tween speed (slower = more bursts)'
     })
 end)
 
