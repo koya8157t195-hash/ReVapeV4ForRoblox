@@ -447,8 +447,9 @@ run(function()
             root.CFrame = targetCFrame
         elseif TPMethod.Value == 'Tween' then
             local speed = tonumber(TweenSpeed.Value) or 0.5
+            local startPos = root.Position
             local targetPos = targetCFrame.Position
-            local totalDistance = (targetPos - root.Position).Magnitude
+            local totalDistance = (targetPos - startPos).Magnitude
             local baseDuration = totalDistance / (speed * 50)
             
             local tween = tweenService:Create(root, TweenInfo.new(baseDuration, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
@@ -459,21 +460,39 @@ run(function()
                     task.wait(math.random(120, 160) / 100)
                     if tween.PlaybackState ~= Enum.PlaybackState.Playing then break end
                     
-                    tween:Pause()
+                    -- Save how far along we are
+                    local elapsed = tween.TimePosition
+                    local totalTime = baseDuration
                     
+                    -- Snap forward 30% of remaining distance
                     local currentPos = root.Position
                     local dir = (targetPos - currentPos).Unit
                     local remainingDist = (targetPos - currentPos).Magnitude
-                    
                     local leapDistance = remainingDist * 0.3
                     root.CFrame = CFrame.new(currentPos + (dir * leapDistance))
                     
+                    -- Figure out new remaining distance and set tween time forward
                     local newRemaining = (targetPos - root.Position).Magnitude
-                    local burstSpeed = speed * 8
-                    local newDuration = newRemaining / (burstSpeed * 50)
+                    local newProgress = 1 - (newRemaining / totalDistance)
+                    local newTimePos = math.min(newProgress * totalTime, totalTime - 0.1)
                     
-                    tween = tweenService:Create(root, TweenInfo.new(newDuration, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
+                    -- Temporarily speed up by adjusting time position
+                    tween:Pause()
+                    tween.TimePosition = newTimePos
                     tween:Play()
+                    
+                    -- Speed burst: crank the tween playback speed way up for 0.2-0.5s
+                    local boostStart = tick()
+                    local boostEnd = boostStart + math.random(20, 50) / 100
+                    local originalPlaybackState = true
+                    
+                    while tick() < boostEnd and tween.PlaybackState == Enum.PlaybackState.Playing do
+                        local currentTime = tween.TimePosition
+                        local timeJump = task.wait()
+                        tween:Pause()
+                        tween.TimePosition = math.min(currentTime + (timeJump * 3), totalTime)
+                        tween:Play()
+                    end
                 end
             end)
             
