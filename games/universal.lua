@@ -14,7 +14,7 @@ end
 local function downloadFile(path, func)
 	if not isfile(path) then
 		local suc, res = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/Koya50/ReVapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true)
+			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true)
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)
@@ -3880,7 +3880,7 @@ run(function()
 		Function = function(hue, sat, val)
 			for i, v in Reference do
 				if type(v) ~= 'table' then
-					v.OutlineColor = entitylib.getEntityColor(i) or Color3.fromHSV(hue, sat, val)
+					v.OutlineColor = Color3.fromHSV(hue, sat, val)
 				end
 			end
 		end,
