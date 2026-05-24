@@ -53,9 +53,7 @@ task.spawn(function()
         if playersService.LocalPlayer and playersService.LocalPlayer.Character then
             local hum = playersService.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
             if hum then
-                hum.WalkSpeed = 25
                 playersService.LocalPlayer:SetAttribute("BackpackEnabled", true)
-                hum.JumpHeight = 5.5
             end
         end
     end
