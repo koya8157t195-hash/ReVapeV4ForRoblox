@@ -883,6 +883,10 @@ run(function()
                         end
                     end
                 end))
+            else
+                if entitylib.isAlive then
+                    entitylib.character.Humanoid.WalkSpeed = 16
+                end
             end
         end,
         Tooltip = 'Puts you at the fastest speed possible without getting kicked.'
@@ -901,12 +905,4 @@ run(function()
             end
         end
     end)
-
-    local originalFunction = Emulator.Function
-    Emulator.Function = function(callback)
-        originalFunction(callback)
-        if not callback and entitylib.isAlive then
-            entitylib.character.Humanoid.WalkSpeed = 16
-        end
-    end
 end)
