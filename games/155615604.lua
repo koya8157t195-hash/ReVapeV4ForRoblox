@@ -891,29 +891,22 @@ run(function()
     LegitToggle = Emulator:CreateToggle({
         Name = 'Legit',
         Default = false,
-        Function = function(callback)
-            if Emulator.Enabled and entitylib.isAlive then
-                if callback then
-                    entitylib.character.Humanoid.WalkSpeed = 25
-                else
-                    entitylib.character.Humanoid.WalkSpeed = 16
-                end
-            end
-        end,
         Tooltip = 'Sets speed to the sprinting speed value'
     })
+
+    task.spawn(function()
+        while task.wait() do
+            if Emulator.Enabled and LegitToggle.Enabled and entitylib.isAlive then
+                entitylib.character.Humanoid.WalkSpeed = 25
+            end
+        end
+    end)
 
     local originalFunction = Emulator.Function
     Emulator.Function = function(callback)
         originalFunction(callback)
-        if callback then
-            if LegitToggle.Enabled and entitylib.isAlive then
-                entitylib.character.Humanoid.WalkSpeed = 25
-            end
-        else
-            if entitylib.isAlive then
-                entitylib.character.Humanoid.WalkSpeed = 16
-            end
+        if not callback and entitylib.isAlive then
+            entitylib.character.Humanoid.WalkSpeed = 16
         end
     end
 end)
