@@ -862,3 +862,58 @@ run(function()
         end
     })
 end)
+
+run(function()
+    local Emulator
+    local LegitToggle
+
+    Emulator = vape.Categories.Blatant:CreateModule({
+        Name = 'Emulator',
+        Function = function(callback)
+            if callback then
+                Emulator:Clean(runService.PreSimulation:Connect(function(dt)
+                    if entitylib.isAlive then
+                        local root = entitylib.character.RootPart
+                        local moveDirection = entitylib.character.Humanoid.MoveDirection
+                        if moveDirection ~= Vector3.zero then
+                            local dest = moveDirection * (100 - entitylib.character.Humanoid.WalkSpeed) * dt
+                            root.CFrame += dest
+                        end
+                    end
+                end))
+            end
+        end,
+        Tooltip = 'Puts you at the fastest speed possible without getting kicked.'
+    })
+
+    LegitToggle = Emulator:CreateToggle({
+        Name = 'Legit',
+        Default = false,
+        Function = function(callback)
+            if callback then
+                task.spawn(function()
+                    while Emulator.Enabled and LegitToggle.Enabled do
+                        if entitylib.isAlive then
+                            entitylib.character.Humanoid.WalkSpeed = 25
+                        end
+                        task.wait()
+                    end
+                end)
+            else
+                if entitylib.isAlive then
+                    entitylib.character.Humanoid.WalkSpeed = 16
+                end
+            end
+        end,
+        Tooltip = 'Sets speed to the sprinting speed value'
+    })
+
+    -- Reset walkspeed when module is disabled
+    local originalFunction = Emulator.Function
+    Emulator.Function = function(callback)
+        originalFunction(callback)
+        if not callback and entitylib.isAlive then
+            entitylib.character.Humanoid.WalkSpeed = 16
+        end
+    end
+end)
