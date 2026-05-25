@@ -1,48 +1,171 @@
-local loadstring = function(...)
-	local res, err = loadstring(...)
-	if err and vape then vape:CreateNotification('Vape', 'Failed to load : '..err, 30, 'alert') end
-	return res
+local run = function(func)
+	func()
 end
-local isfile = isfile or function(file)
-	local suc, res = pcall(function() return readfile(file) end)
-	return suc and res ~= nil and res ~= ''
+local cloneref = cloneref or function(obj)
+	return obj
 end
-local function downloadFile(path, func)
-	if not isfile(path) then
-		local suc, res = pcall(function() return game:HttpGet('https://raw.githubusercontent.com/Koya50/ReVapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true) end)
-		if not suc or res == '404: Not Found' then error(res) end
-		if path:find('.lua') then res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n'..res end
-		writefile(path, res)
+local vapeEvents = setmetatable({}, {
+	__index = function(self, index)
+		self[index] = Instance.new('BindableEvent')
+		return self[index]
 	end
-	return (func or readfile)(path)
-end
-local run = function(func) func() end
-local cloneref = cloneref or function(obj) return obj end
+})
 
 local playersService = cloneref(game:GetService('Players'))
-local replicatedStorage = cloneref(game:GetService('ReplicatedStorage'))
-local runService = cloneref(game:GetService('RunService'))
 local inputService = cloneref(game:GetService('UserInputService'))
-local textService = cloneref(game:GetService('TextService'))
-local tweenService = cloneref(game:GetService('TweenService'))
-local teamsService = cloneref(game:GetService('Teams'))
+local replicatedStorage = cloneref(game:GetService('ReplicatedStorage'))
+local replicatedFirst = cloneref(game:GetService('ReplicatedFirst'))
 local collectionService = cloneref(game:GetService('CollectionService'))
-local contextService = cloneref(game:GetService('ContextActionService'))
+local tweenService = cloneref(game:GetService('TweenService'))
+local runService = cloneref(game:GetService('RunService'))
+local guiService = cloneref(game:GetService('GuiService'))
+local teams = cloneref(game:GetService('Teams'))
+local coreGui = cloneref(game:GetService('CoreGui'))
 
 local gameCamera = workspace.CurrentCamera
 local lplr = playersService.LocalPlayer
-
 local vape = shared.vape
 local entitylib = vape.Libraries.entity
 local whitelist = vape.Libraries.whitelist
-local prediction = vape.Libraries.prediction
 local targetinfo = vape.Libraries.targetinfo
 local sessioninfo = vape.Libraries.sessioninfo
-local vm = loadstring(downloadFile('newvape/libraries/vm.lua'), 'vm')()
+local getfontsize = vape.Libraries.getfontsize
+
+local pl = {}
+local oldshoot
+
+local function canClick()
+	local mousepos = (inputService:GetMouseLocation() - guiService:GetGuiInset())
+	for _, v in lplr.PlayerGui:GetGuiObjectsAtPosition(mousepos.X, mousepos.Y) do
+		local obj = v:FindFirstAncestorOfClass('ScreenGui')
+		if v.Active and v.Visible and obj and obj.Enabled then
+			return false
+		end
+	end
+	for _, v in coreGui:GetGuiObjectsAtPosition(mousepos.X, mousepos.Y) do
+		local obj = v:FindFirstAncestorOfClass('ScreenGui')
+		if v.Active and v.Visible and obj and obj.Enabled then
+			return false
+		end
+	end
+	return (not vape.gui.ScaledGui.ClickGui.Visible) and (not inputService:GetFocusedTextBox())
+end
+
+local function isFriend(plr, recolor)
+	if vape.Categories.Friends.Options['Use friends'].Enabled then
+		local friend = table.find(vape.Categories.Friends.ListEnabled, plr.Name) and true
+		if recolor then
+			friend = friend and vape.Categories.Friends.Options['Recolor visuals'].Enabled
+		end
+		return friend
+	end
+	return nil
+end
+
+local function isTarget(plr)
+	return table.find(vape.Categories.Targets.ListEnabled, plr.Name) and true
+end
 
 local function notif(...)
 	return vape:CreateNotification(...)
 end
+
+local function removeTags(str)
+	str = str:gsub('<br%s*/>', '\n')
+	return (str:gsub('<[^<>]->', ''))
+end
+
+run(function()
+	entitylib.getUpdateConnections = function(ent)
+		local hum = ent.Humanoid
+		return {
+			hum:GetPropertyChangedSignal('Health'),
+			hum:GetPropertyChangedSignal('MaxHealth'),
+			ent.Character:GetAttributeChangedSignal('Trespassing'),
+			ent.Character:GetAttributeChangedSignal('Hostile'),
+			{
+				Connect = function()
+					ent.Friend = ent.Player and isFriend(ent.Player) or nil
+					ent.Target = ent.Player and isTarget(ent.Player) or nil
+					return {Disconnect = function() end}
+				end
+			}
+		}
+	end
+
+	entitylib.targetCheck = function(ent)
+		if ent.TeamCheck then return ent:TeamCheck() end
+		if ent.NPC then return true end
+		if isFriend(ent.Player) then return false end
+		if not select(2, whitelist:get(ent.Player)) then return false end
+		return lplr.Team ~= ent.Player.Team
+	end
+
+	entitylib.isVulnerable = function(ent)
+		return ent.Health > 0 and not ent.Character.FindFirstChildWhichIsA(ent.Character, 'ForceField') and (ent.Player.Team ~= teams.Inmates or (ent.Character:GetAttribute('Trespassing') or ent.Character:GetAttribute('Hostile')))
+	end
+
+	entitylib.IgnoreObject.CollisionGroup = 'ClientBullet'
+	entitylib.IgnoreObject.RespectCanCollide = false
+end)
+entitylib.start()
+
+run(function()
+	pl = {
+		GunTracers = require(replicatedStorage.SharedModules.GunTracers)
+	}
+
+	local gui = lplr.PlayerGui:WaitForChild('Home', 10)
+	gui = gui and gui.hud.ActionArea
+	if vape.Loaded == nil then
+		return
+	end
+
+	local function getShootFunction()
+		for _, v in getconnections(gui.InputBegan) do
+			if v.Function then
+				pl.Shoot = debug.getupvalue(v.Function, 2)
+				pl.Reload = debug.getupvalue(pl.Shoot, 2)
+				pl.Bullet = debug.getupvalue(pl.Shoot, 16)
+				break
+			end
+		end
+	end
+
+	getShootFunction()
+	if not pl.Bullet then
+		repeat
+			getShootFunction()
+			task.wait()
+		until pl.Bullet or vape.Loaded == nil
+
+		if vape.Loaded == nil then
+			table.clear(pl)
+		end
+	end
+
+	local kills = sessioninfo:AddItem('Kills')
+	local arrests = sessioninfo:AddItem('Arrests')
+
+	vape:Clean(replicatedStorage.Killfeed.ChildAdded:Connect(function(obj)
+		local start = obj.Name:find('@')
+		local endchar = obj.Name:find(')', found)
+		local plrname = obj.Name:sub(start + 1, endchar - 1)
+
+		if plrname == lplr.Name then
+			vapeEvents.PlayerKill:Fire()
+			kills:Increment()
+		end
+	end))
+
+	vape:Clean(vapeEvents.Arrested.Event:Connect(function()
+		arrests:Increment()
+	end))
+
+	vape:Clean(function()
+		table.clear(pl)
+	end)
+end)
 
 for _, v in {'Reach', 'Invisible', 'Jesus', 'Killaura', 'MurderMystery'} do
 	vape:Remove(v)
