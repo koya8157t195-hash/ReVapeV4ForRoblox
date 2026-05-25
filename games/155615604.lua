@@ -2020,3 +2020,33 @@ run(function()
 		end
 	})
 end)
+
+run(function()
+	local PunchAura
+	
+	PunchAura = vape.Categories.Blatant:CreateModule({
+		Name = 'PunchAura',
+		Function = function(callback)
+			if callback then
+				repeat
+					local entities = entitylib.AllPosition({
+						Range = 10,
+						Players = true,
+						Part = 'RootPart'
+					})
+	
+					for _, ent in entities do
+						if lplr.Team == teams.Guards and ent.Player.Team == teams.Inmates and not ent.Character:GetAttribute('Hostile') then
+							continue
+						end
+	
+						replicatedStorage.meleeEvent:FireServer(ent.Player, 1, 1)
+					end
+	
+					task.wait(0.05)
+				until not PunchAura.Enabled
+			end
+		end,
+		Tooltip = 'Punch hostile enemies around you'
+	})
+end)
