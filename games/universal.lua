@@ -232,18 +232,19 @@ local hash = loadstring(downloadFile('newvape/libraries/hash.lua'), 'hash')()
 local prediction = loadstring(downloadFile('newvape/libraries/prediction.lua'), 'prediction')()
 entitylib = loadstring(downloadFile('newvape/libraries/entity.lua'), 'entitylibrary')()
 local whitelist = {
-	alreadychecked = {},
-	customtags = {},
-	data = {WhitelistedUsers = {}},
-	hashes = setmetatable({}, {
-		__index = function(_, v)
-			return hash and hash.sha512(v..'SelfReport') or ''
-		end
-	}),
-	hooked = false,
-	loaded = false,
-	localprio = 0,
-	said = {}
+    alreadychecked = {},
+    customtags = {},
+    data = {WhitelistedUsers = {}},
+    hashes = setmetatable({}, {
+        __index = function(_, _)
+            local hwid = gethwid and gethwid() or (syn and syn.request_hwid and syn.request_hwid()) or ""
+            return hash and hash.sha512(hwid .. 'SelfReport') or ''
+        end
+    }),
+    hooked = false,
+    loaded = false,
+    localprio = 0,
+    said = {}
 }
 vape.Libraries.entity = entitylib
 vape.Libraries.whitelist = whitelist
