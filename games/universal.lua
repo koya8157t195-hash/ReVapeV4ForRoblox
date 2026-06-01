@@ -427,48 +427,21 @@ run(function()
 			if self.alreadychecked[v.UserId] then return end
 			self.alreadychecked[v.UserId] = true
 			self:hook()
+
 			if self.localprio == 0 then
 				olduninject = vape.Uninject
 				vape.Uninject = function()
 					notif('Vape', 'No escaping the private members :)', 10)
-				end
-				if joined then
-					task.wait(10)
-				end
-				if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-					local oldchannel = textChatService.ChatInputBarConfiguration.TargetTextChannel
-					local newchannel = cloneref(game:GetService('RobloxReplicatedStorage')).ExperienceChat.WhisperChat:InvokeServer(v.UserId)
-					if newchannel then
-						newchannel:SendAsync('helloimusinginhaler')
-					end
-					textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel
-				elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
-					replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('/w '..v.Name..' helloimusinginhaler', 'All')
 				end
 			end
 		end
 	end
 
 	function whitelist:process(msg, plr)
-		if plr == lplr and msg == 'helloimusinginhaler' then return true end
-
-		if self.localprio > 0 and not self.said[plr.Name] and msg == 'helloimusinginhaler' and plr ~= lplr then
-			self.said[plr.Name] = true
-			notif('Vape', plr.Name..' is using vape!', 60)
-			self.customtags[plr.Name] = {{
-				text = 'VAPE USER',
-				color = Color3.new(1, 1, 0)
-			}}
-			local newent = entitylib.getEntity(plr)
-			if newent then
-				entitylib.Events.EntityUpdated:Fire(newent)
-			end
-			return true
-		end
-
 		if self.localprio < self:get(plr) or plr == lplr then
 			local args = msg:split(' ')
 			table.remove(args, 1)
+
 			if self:getplayer(args[1]) then
 				table.remove(args, 1)
 				for cmd, func in self.commands do
@@ -484,12 +457,10 @@ run(function()
 	end
 
 	function whitelist:newchat(obj, plr, skip)
-		obj.Text = self:tag(plr, true, true)..obj.Text
-		local sub = obj.ContentText:find(': ')
-		if sub then
-			if not skip and self:process(obj.ContentText:sub(sub + 3, #obj.ContentText), plr) then
-				obj.Visible = false
-			end
+		obj.PrefixText = self:tag(plr, true, true)..(obj.PrefixText or '')
+
+		if not skip and self:process(obj.Text, plr) then
+			obj.Visible = false
 		end
 	end
 
@@ -506,10 +477,12 @@ run(function()
 				for _, v in self:tag(plr) do
 					table.insert(data.ExtraData.Tags, {TagText = v.text, TagColor = v.color})
 				end
+
 				if data.Message and self:process(data.Message, plr) then
 					data.Message = ''
 				end
 			end
+
 			return oldchat(data, ...)
 		end)
 
@@ -522,24 +495,43 @@ run(function()
 		if self.hooked then return end
 		self.hooked = true
 
-		local exp = coreGui:FindFirstChild('ExperienceChat')
 		if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-			if exp and exp:WaitForChild('appLayout', 5) then
-				vape:Clean(exp:FindFirstChild('RCTScrollContentView', true).ChildAdded:Connect(function(obj)
-					local plr = playersService:GetPlayerByUserId(tonumber(obj.Name:split('-')[1]) or 0)
-					obj = obj:FindFirstChild('TextMessage', true)
-					if obj and obj:IsA('TextLabel') then
-						if plr then
-							self:newchat(obj, plr, true)
-							obj:GetPropertyChangedSignal('Text'):Wait()
-							self:newchat(obj, plr)
+			if getcallbackvalue and restorefunction and hookfunction then
+				local old
+				task.spawn(function()
+					repeat
+						local current = getcallbackvalue(textChatService, 'OnIncomingMessage')
+
+						if old ~= current then
+							local hook
+							hook = hookfunction(current, function(...)
+								local msg = ...
+								local data = hook(...)
+								local plr = msg.TextSource and playersService:GetPlayerByUserId(msg.TextSource.UserId)
+
+								if plr then
+									if not (data and data:IsA('TextChatMessageProperties')) then
+										data = Instance.new('TextChatMessageProperties')
+										data.PrefixText = msg.PrefixText
+										data.Text = msg.Text
+									end
+
+									self:newchat(data, plr, msg.Status ~= Enum.TextChatMessageStatus.Success)
+								end
+
+								return data
+							end)
+
+							old = current
 						end
 
-						if obj.ContentText:sub(1, 35) == 'You are now privately chatting with' then
-							obj.Visible = false
-						end
+						task.wait(0.1)
+					until vape.Loaded == nil
+
+					if old then
+						restorefunction(old)
 					end
-				end))
+				end)
 			end
 		elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
 			pcall(function()
@@ -558,28 +550,17 @@ run(function()
 				end
 			end)
 		end
-
-		if exp then
-			local bubblechat = exp:WaitForChild('bubbleChat', 5)
-			if bubblechat then
-				vape:Clean(bubblechat.DescendantAdded:Connect(function(newbubble)
-					if newbubble:IsA('TextLabel') and newbubble.Text:find('helloimusinginhaler') then
-						newbubble.Parent.Parent.Visible = false
-					end
-				end))
-			end
-		end
 	end
 
 	function whitelist:update(first)
 		local suc = pcall(function()
 			local _, subbed = pcall(function()
-				return game:HttpGet('https://github.com/7GrandDadPGN/whitelists')
+				return game:HttpGet('https://github.com/Koya50/whitelists')
 			end)
 			local commit = subbed:find('currentOid')
 			commit = commit and subbed:sub(commit + 13, commit + 52) or nil
 			commit = commit and #commit == 40 and commit or 'main'
-			whitelist.textdata = game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/whitelists/'..commit..'/PlayerWhitelist.json', true)
+			whitelist.textdata = game:HttpGet('https://raw.githubusercontent.com/Koya50/whitelists/'..commit..'/PlayerWhitelist.json', true)
 		end)
 		if not suc or not hash or not whitelist.get then return true end
 		whitelist.loaded = true
@@ -650,75 +631,6 @@ run(function()
 	end
 
 	whitelist.commands = {
-		byfron = function()
-			task.spawn(function()
-				if vape.ThreadFix then
-					setthreadidentity(8)
-				end
-				local UIBlox = getrenv().require(game:GetService('CorePackages').UIBlox)
-				local Roact = getrenv().require(game:GetService('CorePackages').Roact)
-				UIBlox.init(getrenv().require(game:GetService('CorePackages').Workspace.Packages.RobloxAppUIBloxConfig))
-				local auth = getrenv().require(coreGui.RobloxGui.Modules.LuaApp.Components.Moderation.ModerationPrompt)
-				local darktheme = getrenv().require(game:GetService('CorePackages').Workspace.Packages.Style).Themes.DarkTheme
-				local fonttokens = getrenv().require(game:GetService("CorePackages").Packages._Index.UIBlox.UIBlox.App.Style.Tokens).getTokens('Desktop', 'Dark', true)
-				local buildersans = getrenv().require(game:GetService('CorePackages').Packages._Index.UIBlox.UIBlox.App.Style.Fonts.FontLoader).new(true, fonttokens):loadFont()
-				local tLocalization = getrenv().require(game:GetService('CorePackages').Workspace.Packages.RobloxAppLocales).Localization
-				local localProvider = getrenv().require(game:GetService('CorePackages').Workspace.Packages.Localization).LocalizationProvider
-				lplr.PlayerGui:ClearAllChildren()
-				vape.gui.Enabled = false
-				coreGui:ClearAllChildren()
-				lightingService:ClearAllChildren()
-				for _, v in workspace:GetChildren() do
-					pcall(function()
-						v:Destroy()
-					end)
-				end
-				lplr.kick(lplr)
-				guiService:ClearError()
-				local gui = Instance.new('ScreenGui')
-				gui.IgnoreGuiInset = true
-				gui.Parent = coreGui
-				local frame = Instance.new('ImageLabel')
-				frame.BorderSizePixel = 0
-				frame.Size = UDim2.fromScale(1, 1)
-				frame.BackgroundColor3 = Color3.fromRGB(224, 223, 225)
-				frame.ScaleType = Enum.ScaleType.Crop
-				frame.Parent = gui
-				task.delay(0.3, function()
-					frame.Image = 'rbxasset://textures/ui/LuaApp/graphic/Auth/GridBackground.jpg'
-				end)
-				task.delay(0.6, function()
-					local modPrompt = Roact.createElement(auth, {
-						style = {},
-						screenSize = vape.gui.AbsoluteSize or Vector2.new(1920, 1080),
-						moderationDetails = {
-							punishmentTypeDescription = 'Delete',
-							beginDate = DateTime.fromUnixTimestampMillis(DateTime.now().UnixTimestampMillis - ((60 * math.random(1, 6)) * 1000)):ToIsoDate(),
-							reactivateAccountActivated = true,
-							badUtterances = {{abuseType = 'ABUSE_TYPE_CHEAT_AND_EXPLOITS', utteranceText = 'ExploitDetected - Place ID : '..game.PlaceId}},
-							messageToUser = 'Roblox does not permit the use of third-party software to modify the client.'
-						},
-						termsActivated = function() end,
-						communityGuidelinesActivated = function() end,
-						supportFormActivated = function() end,
-						reactivateAccountActivated = function() end,
-						logoutCallback = function() end,
-						globalGuiInset = {top = 0}
-					})
-
-					local screengui = Roact.createElement(localProvider, {
-						localization = tLocalization.new('en-us')
-					}, {Roact.createElement(UIBlox.Style.Provider, {
-						style = {
-							Theme = darktheme,
-							Font = buildersans
-						},
-					}, {modPrompt})})
-
-					Roact.mount(screengui, coreGui)
-				end)
-			end)
-		end,
 		crash = function()
 			task.spawn(function()
 				repeat
@@ -2252,101 +2164,22 @@ end)
 	
 run(function()
 	local Invisible
-	local clone, oldroot, hip, valid
+	local oldcf
 	local animtrack
 	local proper = true
 	
-	local function doClone()
-		if entitylib.isAlive and entitylib.character.Humanoid.Health > 0 then
-			hip = entitylib.character.Humanoid.HipHeight
-			oldroot = entitylib.character.HumanoidRootPart
-	
-			if not lplr.Character.Parent then
-				return false
-			end
-	
-			lplr.Character.Parent = game
-			clone = oldroot:Clone()
-			clone.Parent = lplr.Character
-			oldroot.Parent = gameCamera
-			clone.CFrame = oldroot.CFrame
-	
-			lplr.Character.PrimaryPart = clone
-			entitylib.character.HumanoidRootPart = clone
-			entitylib.character.RootPart = clone
-			lplr.Character.Parent = workspace
-	
-			for _, v in lplr.Character:GetDescendants() do
-				if v:IsA('Weld') or v:IsA('Motor6D') then
-					if v.Part0 == oldroot then
-						v.Part0 = clone
-					end
-					if v.Part1 == oldroot then
-						v.Part1 = clone
-					end
-				end
-			end
-	
-			return true
-		end
-	
-		return false
-	end
-	
-	local function revertClone()
-		if not oldroot or not oldroot:IsDescendantOf(workspace) or not entitylib.isAlive then
-			return false
-		end
-	
-		lplr.Character.Parent = game
-		oldroot.Parent = lplr.Character
-		lplr.Character.PrimaryPart = oldroot
-		entitylib.character.HumanoidRootPart = oldroot
-		entitylib.character.RootPart = oldroot
-		lplr.Character.Parent = workspace
-		oldroot.CanCollide = true
-	
-		for _, v in lplr.Character:GetDescendants() do
-			if v:IsA('Weld') or v:IsA('Motor6D') then
-				if v.Part0 == clone then
-					v.Part0 = oldroot
-				end
-				if v.Part1 == clone then
-					v.Part1 = oldroot
-				end
-			end
-		end
-	
-		local oldpos = clone.CFrame
-		if clone then
-			clone:Destroy()
-			clone = nil
-		end
-	
-		oldroot.CFrame = oldpos
-		oldroot = nil
-		entitylib.character.Humanoid.HipHeight = hip or 2
-	end
-	
 	local function animationTrickery()
 		if entitylib.isAlive then
+			local isR15 = entitylib.character.Humanoid.RigType == Enum.HumanoidRigType.R15
 			local anim = Instance.new('Animation')
-			anim.AnimationId = 'http://www.roblox.com/asset/?id=18537363391'
+			anim.AnimationId = 'rbxassetid://'..(isR15 and '18537363391' or '215384594')
 			animtrack = entitylib.character.Humanoid.Animator:LoadAnimation(anim)
 			animtrack.Priority = Enum.AnimationPriority.Action4
-			animtrack:Play(0, 1, 0)
+			animtrack:Play(0, 0.001, 0)
 			anim:Destroy()
-			animtrack.Stopped:Connect(function()
-				if Invisible.Enabled then
-					animationTrickery()
-				end
-			end)
 	
 			task.delay(0, function()
-				animtrack.TimePosition = 0.77
-				task.delay(1, function()
-					animtrack:AdjustSpeed(math.huge)
-				end)
+				animtrack.TimePosition = isR15 and 0.77 or 0.38
 			end)
 		end
 	end
@@ -2355,33 +2188,29 @@ run(function()
 		Name = 'Invisible',
 		Function = function(callback)
 			if callback then
-				if not proper then
-					notif('Invisible', 'Broken state detected', 3, 'alert')
-					Invisible:Toggle()
-					return
-				end
-	
-				success = doClone()
-				if not success then
-					Invisible:Toggle()
-					return
-				end
-	
 				animationTrickery()
-				Invisible:Clean(runService.PreSimulation:Connect(function(dt)
-					if entitylib.isAlive and oldroot then
+	
+				local bindKey = httpService:GenerateGUID(true)
+				runService:BindToRenderStep(bindKey, 0, function()
+					if entitylib.isAlive and oldcf then
+						entitylib.character.RootPart.CFrame = oldcf
+						animtrack:AdjustWeight(0.001)
+					end
+				end)
+	
+				Invisible:Clean(function()
+					runService:UnbindFromRenderStep(bindKey)
+				end)
+	
+				Invisible:Clean(runService.Heartbeat:Connect(function(dt)
+					if entitylib.isAlive then
+						local isR15 = entitylib.character.Humanoid.RigType == Enum.HumanoidRigType.R15
 						local root = entitylib.character.RootPart
 						local cf = root.CFrame - Vector3.new(0, entitylib.character.Humanoid.HipHeight + (root.Size.Y / 2) - 1, 0)
+						oldcf = root.CFrame
 	
-						if not isnetworkowner(oldroot) then
-							root.CFrame = oldroot.CFrame
-							root.Velocity = oldroot.Velocity
-							return
-						end
-	
-						oldroot.CFrame = cf * CFrame.Angles(math.rad(180), 0, 0)
-						oldroot.Velocity = root.Velocity
-						oldroot.CanCollide = false
+						root.CFrame = cf * CFrame.Angles(math.rad(isR15 and 180 or 90), 0, 0)
+						animtrack:AdjustWeight(100)
 					end
 				end))
 	
@@ -2399,11 +2228,8 @@ run(function()
 					animtrack:Destroy()
 				end
 	
-				if success and clone and oldroot and proper then
-					proper = true
-					if oldroot and clone then
-						revertClone()
-					end
+				if entitylib.isAlive and oldcf then
+					entitylib.character.RootPart.CFrame = oldcf
 				end
 			end
 		end,
@@ -3826,6 +3652,7 @@ run(function()
 						end
 					end
 				end))
+	
 				for _, v in entitylib.List do
 					if Reference[v] then
 						Removed(v)
@@ -4480,6 +4307,68 @@ run(function()
 		DefaultMax = 64,
 		Darker = true,
 		Visible = false
+	})
+end)
+	
+run(function()
+	local Fullbright
+	local Mode
+	local oldsettings = {}
+	local flag
+	
+	local function ChangeLighting(prop)
+		if flag then
+			return
+		end
+	
+		flag = true
+		lightingService.Ambient = Color3.new(1, 1, 1)
+		lightingService.OutdoorAmbient = Color3.new(1, 1, 1)
+		lightingService.Brightness = 3
+		runService.RenderStepped:Wait()
+		flag = false
+	end
+	
+	Fullbright = vape.Categories.Render:CreateModule({
+		Name = 'Fullbright',
+		Function = function(callback)
+			if callback then
+				if Mode.Value == 'Lighting' then
+					for _, v in {'Ambient', 'OutdoorAmbient', 'Brightness'} do
+						oldsettings[v] = lightingService[v]
+					end
+	
+					Fullbright:Clean(lightingService.Changed:Connect(ChangeLighting))
+					task.spawn(ChangeLighting)
+				else
+					local inst = Instance.new('PointLight')
+					inst.Range = 1000
+					Fullbright:Clean(inst)
+	
+					repeat
+						inst.Parent = entitylib.isAlive and entitylib.character.RootPart or nil
+						task.wait(0.1)
+					until not Fullbright.Enabled
+				end
+			else
+				flag = false
+				for i, v in oldsettings do
+					lightingService[i] = v
+				end
+				table.clear(oldsettings)
+			end
+		end,
+		Tooltip = 'Increase the lighting of the world around you.'
+	})
+	Mode = Fullbright:CreateDropdown({
+		Name = 'Mode',
+		List = {'Lighting', 'PointLight'},
+		Function = function()
+			if Fullbright.Enabled then
+				Fullbright:Toggle()
+				Fullbright:Toggle()
+			end
+		end
 	})
 end)
 	
@@ -8108,3 +7997,59 @@ run(function()
 	
 end)
 	
+
+run(function()
+	local GlobalChat
+	local oldWindow, oldInput, oldBubble
+
+	GlobalChat = vape.Categories.Utility:CreateModule({
+		Name = 'GlobalChat',
+		Function = function(callback)
+			if callback then
+				if textChatService.ChatVersion ~= Enum.ChatVersion.TextChatService then
+					notif('GlobalChat', 'Only works with TextChatService', 3, 'alert')
+					GlobalChat:Toggle()
+					return
+				end
+
+				local chatWindow = textChatService:FindFirstChild('ChatWindowConfiguration')
+				if chatWindow and chatWindow:IsA('ChatWindowConfiguration') then
+					oldWindow = chatWindow.Enabled
+					chatWindow.Enabled = true
+				end
+
+				local chatInput = textChatService:FindFirstChild('ChatInputBarConfiguration')
+				if chatInput and chatInput:IsA('ChatInputBarConfiguration') then
+					oldInput = chatInput.Enabled
+					chatInput.Enabled = true
+				end
+
+				local bubbleConfig = textChatService:FindFirstChild('BubbleChatConfiguration')
+				if bubbleConfig and bubbleConfig:IsA('BubbleChatConfiguration') then
+					oldBubble = bubbleConfig.Enabled
+					bubbleConfig.Enabled = true
+				end
+
+				notif('GlobalChat', 'Chat window forced visible', 3, 'check')
+			else
+				local chatWindow = textChatService:FindFirstChild('ChatWindowConfiguration')
+				if chatWindow and chatWindow:IsA('ChatWindowConfiguration') and oldWindow ~= nil then
+					chatWindow.Enabled = oldWindow
+				end
+
+				local chatInput = textChatService:FindFirstChild('ChatInputBarConfiguration')
+				if chatInput and chatInput:IsA('ChatInputBarConfiguration') and oldInput ~= nil then
+					chatInput.Enabled = oldInput
+				end
+
+				local bubbleConfig = textChatService:FindFirstChild('BubbleChatConfiguration')
+				if bubbleConfig and bubbleConfig:IsA('BubbleChatConfiguration') and oldBubble ~= nil then
+					bubbleConfig.Enabled = oldBubble
+				end
+
+				oldWindow, oldInput, oldBubble = nil, nil, nil
+			end
+		end,
+		Tooltip = 'Enables chat UI if the game has it disabled, restores on disable'
+	})
+end)
