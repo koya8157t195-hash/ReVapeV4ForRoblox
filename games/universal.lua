@@ -236,7 +236,7 @@ local whitelist = {
     customtags = {},
     data = {WhitelistedUsers = {}},
     hashes = setmetatable({}, {
-			hashes = setmetatable({}, {
+			hashes = setmetatable({},
         __index = function(_, _)
             local hwid = gethwid and gethwid() or (syn and syn.request_hwid and syn.request_hwid()) or ""
             return hash and hash.sha512(hwid .. 'SelfReport') or ''
