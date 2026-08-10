@@ -36,7 +36,7 @@ local topY = top.Position.Y + top.Size.Y / 2
 --local anticheatloop = getconnections(main.Marco.OnClientEvent)[1].Function
 
 local function getSpeed()
-	local factor = 2.25
+	local factor = 1.75
 	local realSpeed = math.max(clientData.getSpeedFactor(), 0.8)
 	if entitylib.isAlive and entitylib.character.RootPart.Position.Y < (topY - 1) and realSpeed >= 1 then 
 		factor += 1
